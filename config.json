@@ -1,1 +1,1 @@
-{"Servo1": {"range_from": 50, "range_to": 150}, "Servo2": {"range_from": 0, "range_to": 120}}
+{"thumb": {"range_from": 0, "range_to": 120}, "index_finger": {"range_from": 0, "range_to": 120}, "middle_finger": {"range_from": 0, "range_to": 120}, "ring_finger": {"range_from": 0, "range_to": 120}, "pinky": {"range_from": 0, "range_to": 120}, "forearm": {"range_from": 0, "range_to": 120}}
