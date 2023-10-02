@@ -8,7 +8,7 @@ Servo ring_finger;
 Servo pinky;
 Servo forearm;
 
-String inByte;
+//String inByte;
 //int pos;
 int receivedData[6];
 
@@ -36,17 +36,16 @@ void loop() {
   // if data available in serial port
   if (Serial.available()){
     for (int i = 0; i < 6; i++) {
-      //Serial.print(" ");
       receivedData[i] = Serial.read();
-      //Serial.print(receivedData[i]);
-      //Serial.print(" ");
     }
-    thumb.write(receivedData[0]);
-    index_finger.write(receivedData[1]);
-    middle_finger.write(receivedData[2]);
-    ring_finger.write(receivedData[3]);
-    pinky.write(receivedData[4]);
-    forearm.write(receivedData[5]); 
-
   }
+
+  thumb.write(receivedData[0]);
+  index_finger.write(receivedData[1]);
+  middle_finger.write(receivedData[2]);
+  ring_finger.write(receivedData[3]);
+  pinky.write(receivedData[4]);
+  forearm.write(receivedData[5]); 
+  delay(50);
+
 }
