@@ -4,8 +4,7 @@
 Servo thumb;
 Servo index_finger;
 Servo middle_finger;
-Servo ring_finger;
-Servo pinky;
+Servo ring_pinky;
 Servo forearm;
 
 int i = 0;
@@ -17,12 +16,11 @@ void setup() {
   Serial.begin(9600);
 
   // communication pin for each servo
-  thumb.attach(3);
-  index_finger.attach(5);
-  middle_finger.attach(6);
-  ring_finger.attach(9);
-  pinky.attach(10);
-  forearm.attach(11);
+  thumb.attach(9);
+  index_finger.attach(6);
+  middle_finger.attach(10);
+  ring_pinky.attach(5);
+  forearm.attach(3);
 
   //initial position of each servo
   //thumb.write(35);
@@ -53,9 +51,8 @@ void loop() {
     thumb.write(receivedData[0]);
     index_finger.write(receivedData[1]);
     middle_finger.write(receivedData[2]);
-    ring_finger.write(receivedData[3]);
-    pinky.write(receivedData[4]);
-    forearm.write(receivedData[5]); 
+    ring_pinky.write(receivedData[3]);
+    forearm.write(receivedData[4]); 
     }
   }
   // if data available in serial port
