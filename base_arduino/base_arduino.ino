@@ -7,7 +7,7 @@ Servo index_finger;
 Servo middle_finger;
 Servo ring_pinky;
 Servo forearm;
-int receivedData[6];
+int receivedData[7];
 int i = 0;
 
 
@@ -25,8 +25,9 @@ void loop() {
 	while (Serial.available()){
     i = i+1;
     delay(10);
-    Serial.print(i);
     receivedData[i] = Serial.readString().toInt(); 
+    delay(10);
+    //Serial.print(receivedData[i]);
   } 
   
   if (i>=6){
@@ -38,9 +39,11 @@ void loop() {
     index_finger.write(receivedData[3]);
     delay(10);
     middle_finger.write(receivedData[4]);
+    //Serial.print(receivedData[4]);
     delay(10);
     ring_pinky.write(receivedData[5]);
     delay(10);
     forearm.write(receivedData[6]);
+    delay(10);
   }
 } 
