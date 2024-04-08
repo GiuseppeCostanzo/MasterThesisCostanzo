@@ -27,23 +27,16 @@ void loop() {
     delay(10);
     receivedData[i] = Serial.readString().toInt(); 
     delay(10);
-    //Serial.print(receivedData[i]);
   } 
   
   if (i>=6){
     i = 0;
     thumb_big.write(receivedData[1]);
-    delay(10);
     thumb_little.write(receivedData[2]);
-    delay(10);
     index_finger.write(receivedData[3]);
-    delay(10);
     middle_finger.write(receivedData[4]);
-    //Serial.print(receivedData[4]);
-    delay(10);
     ring_pinky.write(receivedData[5]);
-    delay(10);
     forearm.write(receivedData[6]);
-    delay(10);
   }
 } 
+  
