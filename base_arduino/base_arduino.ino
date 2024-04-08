@@ -20,6 +20,13 @@ void setup() {
   middle_finger.attach(10);
   ring_pinky.attach(5);
   forearm.attach(3);
+
+  thumb_big.write(0);
+  thumb_little.write(0);
+  index_finger.write(0);
+  middle_finger.write(0);
+  ring_pinky.write(0);
+  forearm.write(0);
 } 
 void loop() { 
 	while (Serial.available()){
