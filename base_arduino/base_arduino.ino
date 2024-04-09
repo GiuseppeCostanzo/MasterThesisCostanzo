@@ -7,13 +7,12 @@ Servo index_finger;
 Servo middle_finger;
 Servo ring_pinky;
 Servo forearm;
-int receivedData[7];
+int receivedData[6];
 int i = 0;
 
 
 void setup() { 
-	Serial.begin(115200); 
-	Serial.setTimeout(1); 
+	Serial.begin(38400); 
   thumb_big.attach(9);
   thumb_little.attach(11);
   index_finger.attach(6);
@@ -27,23 +26,24 @@ void setup() {
   middle_finger.write(0);
   ring_pinky.write(0);
   forearm.write(0);
+
+  for(int a = 0; a<=5; a++){
+    receivedData[a] = 1;
+  }
 } 
 void loop() { 
-	while (Serial.available()){
+	if (Serial.available()){
+    receivedData[i] = Serial.read(); 
     i = i+1;
-    delay(10);
-    receivedData[i] = Serial.readString().toInt(); 
-    delay(10);
   } 
   
   if (i>=6){
     i = 0;
-    thumb_big.write(receivedData[1]);
-    thumb_little.write(receivedData[2]);
-    index_finger.write(receivedData[3]);
-    middle_finger.write(receivedData[4]);
-    ring_pinky.write(receivedData[5]);
-    forearm.write(receivedData[6]);
+    thumb_big.write(receivedData[0]);
+    thumb_little.write(receivedData[1]);
+    index_finger.write(receivedData[2]);
+    middle_finger.write(receivedData[3]);
+    ring_pinky.write(receivedData[4]);
+    forearm.write(receivedData[5]);
   }
 } 
-  
