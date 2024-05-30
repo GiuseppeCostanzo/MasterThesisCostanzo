@@ -1,0 +1,104 @@
+{
+    "Simple": "mov3",
+    "Complex": {
+        "inner_value": "inner3"
+    },
+    "values": [
+        {
+            "Simple": "mov2",
+            "Complex": {
+                "inner_value": "inner2"
+            },
+            "values": [
+                {
+                    "Simple": "mov1",
+                    "Complex": {
+                        "inner_value": "inner1"
+                    },
+                    "values": [
+                        {
+                            "Simple": "valore_finale",
+                            "Matrice": [
+                                [
+                                    1,
+                                    2,
+                                    3
+                                ],
+                                [
+                                    4,
+                                    5,
+                                    6
+                                ],
+                                [
+                                    7,
+                                    8,
+                                    9
+                                ]
+                            ]
+                        },
+                        {
+                            "Simple": "static1",
+                            "Matrice": [
+                                [
+                                    10,
+                                    11,
+                                    12
+                                ],
+                                [
+                                    13,
+                                    14,
+                                    15
+                                ],
+                                [
+                                    16,
+                                    17,
+                                    18
+                                ]
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Simple": "static2",
+                    "Matrice": [
+                        [
+                            20,
+                            21,
+                            22
+                        ],
+                        [
+                            23,
+                            24,
+                            25
+                        ],
+                        [
+                            26,
+                            27,
+                            28
+                        ]
+                    ]
+                }
+            ]
+        },
+        {
+            "Simple": "static3",
+            "Matrice": [
+                [
+                    30,
+                    31,
+                    32
+                ],
+                [
+                    33,
+                    34,
+                    35
+                ],
+                [
+                    36,
+                    37,
+                    38
+                ]
+            ]
+        }
+    ]
+}
