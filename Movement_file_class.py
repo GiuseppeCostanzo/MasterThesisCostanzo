@@ -50,12 +50,12 @@ class SinusoidalMovement(Movement):
     # phase in RADIANT (-1,1)
     # deltaT sampling period in SECONDS (periodo di campionamento in secondi) - 0.065
     # y_init starting point of the sinusoid on the y axis
-    def __init__(self, startTime, endTime, amplitude, frequency, phase, deltaT, y_init):
+    def __init__(self, startTime, endTime, amplitude, frequency, phase, deltaT=70, y_init):
         super().__init__(startTime, endTime)
         self.amplitude = amplitude
         self.frequency = frequency
         self.phase = phase
-        self.deltaT = deltaT # Periodo di campionamento
+        self.deltaT = deltaT/1000 # Periodo di campionamento
         self.y_init = y_init
         
     def discretize(self):
