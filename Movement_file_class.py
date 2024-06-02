@@ -55,7 +55,7 @@ class SinusoidalMovement(Movement):
         self.amplitude = amplitude
         self.frequency = frequency
         self.phase = phase
-        self.deltaT = deltaT/1000 # Periodo di campionamento
+        self.deltaT = deltaT/1000 # Periodo di campionamento (riporto in secondi)
         self.y_init = y_init
         
     def discretize(self):
