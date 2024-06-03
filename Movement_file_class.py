@@ -53,7 +53,8 @@ class SinusoidalMovement(Movement):
     def __init__(self, startTime, endTime, amplitude, frequency, phase, y_init,deltaT=70):
         super().__init__(startTime, endTime)
         self.amplitude = amplitude
-        self.frequency = frequency
+        a = np.array(frequency)
+        self.frequency = (a/1000).tolist()
         self.phase = phase
         self.deltaT = deltaT/1000 # Periodo di campionamento (riporto in secondi)
         self.y_init = y_init
