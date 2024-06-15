@@ -819,7 +819,7 @@ class GUI(tk.Tk):
         tree.pack(expand=True, fill='both')
         scrollbar.config(command=tree.yview)
         
-        # *********** innner functions per editare un movimento richiamata in modify ***********************************
+        # *********** innner functions per editare un movimento, viene richiamata in modify ***********************************
         def modify_window(movement_type):
             if movement_type == "linear":
                 nonlocal selected_item_tree_view
@@ -1019,8 +1019,56 @@ class GUI(tk.Tk):
                 end_list = [thumb_big_end,thumb_little_end,index_end,middle_end,
                             ring_pinky_end,forearm_end]
 
+                # function for saving modified values
+                def save_l(init_list,end_list,time_init,time_end,deltaT):
+
+                    for item in init_list:
+                        if item.get() == '' or item.get() is None:
+                            messagebox.showerror("Error", "Fill all init fields")
+                            return
+                        
+                    for item in end_list:
+                        if item.get() == '' or item.get() is None:
+                            messagebox.showerror("Error", "Fill all end fields ")
+                            return
+                
+                    # Controlli su istante iniziale e finale 
+                    if time_init.get() == '' or time_init.get() is None:
+                        messagebox.showerror("Error", "Insert an initial time")
+                        return
+                    if time_end.get() == '' or time_end.get() is None:
+                        messagebox.showerror("Error", "Insert a final time")
+                        return
+                    if(int(time_init.get()) >= int(time_end.get())):
+                        messagebox.showerror("Error", "Insert an initial time smaller than the final time")
+                        return
+                    
+                    #using .get() over the input fields for get the values
+                    init_list_unpacked = []
+                    end_list_unpacked = []
+                    for item in init_list:
+                        init_list_unpacked.append(item.get())
+                    init_list_unpacked.append(time_init.get())
+                            
+                    for item in end_list:
+                        end_list_unpacked.append(item.get())
+                    end_list_unpacked.append(time_end.get())
+
+                    nonlocal elements_in_tree_view
+                    nonlocal selected_item_tree_view
+                    nonlocal new_window
+                    for element in elements_in_tree_view:
+                        if element["id"] == selected_item_tree_view["id"]:
+                            element["values"][0] = init_list_unpacked
+                            element["values"][1] = end_list_unpacked
+                            element["values"][2] = deltaT.get()
+                            new_window.destroy()
+                            return
+                    print("ERROR, the selected item does not exists")
+                    new_window.destroy()
+                    return
                 # Button (save in RAM - elements_in_tree_view)
-                button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2)
+                button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2,command=lambda:save_l(init_list,end_list,time_init,time_end,deltaT))
                 button1.grid(row=11,column=0,pady=20,columnspan=4)
             
         
@@ -1037,7 +1085,8 @@ class GUI(tk.Tk):
                 return
                 
             if selected_item_tree_view["type"] == "sinusoidal":
-                modify_window("sinusoidal")
+                #modify_window("sinusoidal")
+                print("da implementare")
                 return
                 
             if selected_item_tree_view["type"] == "complex":
