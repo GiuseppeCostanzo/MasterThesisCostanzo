@@ -849,26 +849,18 @@ class GUI(tk.Tk):
                 label1.grid(row=2,column=0,sticky='e')
 
                 # entry - init position
-                thumb_big_init = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                thumb_big_init = tk.Entry(new_window, fg='black',validate="key",)
                 a = selected_item_tree_view["values"][0][0]
-                if len(a) == 2:
-                    thumb_big_init.insert(0, a[1]) #0 init entry
-                    thumb_big_init.insert(0, a[0])
-                else:
-                     thumb_big_init.insert(0, a)
+                thumb_big_init.insert(0, a)
+                thumb_big_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 thumb_big_init.configure(justify=tk.CENTER) 
                 thumb_big_init.grid(row=2,column=1,padx=5) 
 
                 # entry - end position
-                thumb_big_end = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                thumb_big_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][0]
-                if len(a) == 2:
-                    thumb_big_end.insert(0, a[1]) #0 init entry
-                    thumb_big_end.insert(0, a[0])
-                else:
-                     thumb_big_end.insert(0, a)
+                thumb_big_end.insert(0, a)
+                thumb_big_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 thumb_big_end.configure(justify=tk.CENTER) 
                 thumb_big_end.grid(row=2,column=2)
 
@@ -878,28 +870,21 @@ class GUI(tk.Tk):
                 label2.grid(row=3,column=0,sticky='e')
 
                 # entry - init position
-                thumb_little_init = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                thumb_little_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][1]
-                if len(a) == 2:
-                    thumb_little_init.insert(0, a[1]) #0 init entry
-                    thumb_little_init.insert(0, a[0])
-                else:
-                     thumb_little_init.insert(0, a)
+                thumb_little_init.insert(0, a)
+                thumb_little_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                
                 thumb_little_init.configure(justify=tk.CENTER) 
                 thumb_little_init.grid(row=3,column=1,padx=5)
 
                 # entry - end position
-                thumb_little_end = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                thumb_little_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][1]
-                if len(a) == 2:
-                    thumb_little_end.insert(0, a[1]) #0 init entry
-                    thumb_little_end.insert(0, a[0])
-                else:
-                     thumb_little_end.insert(0, a)
-                thumb_little_init.configure(justify=tk.CENTER) 
-                thumb_little_init.grid(row=3,column=1,padx=5)
+                thumb_little_end.insert(0, a)
+                thumb_little_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                thumb_little_end.configure(justify=tk.CENTER) 
+                thumb_little_end.grid(row=3,column=1,padx=5)
                 thumb_little_end.configure(justify=tk.CENTER) 
                 thumb_little_end.grid(row=3,column=2)
 
@@ -909,28 +894,18 @@ class GUI(tk.Tk):
                 label3.grid(row=4,column=0,sticky='e')
 
                 # entry - init position
-                index_init = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                index_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][2]
-                if len(a) == 2:
-                    index_init.insert(0, a[1]) #0 init entry
-                    index_init.insert(0, a[0])
-                else:
-                     index_init.insert(0, a)
+                index_init.insert(0, a)
+                index_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 index_init.configure(justify=tk.CENTER) 
                 index_init.grid(row=4,column=1,padx=5)
 
                 # entry - end position
-                index_end = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                index_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][2]
-                if len(a) == 2:
-                    index_end.insert(0, a[1]) #0 init entry
-                    index_end.insert(0, a[0])
-                else:
-                     index_end.insert(0, a)
-                index_init.configure(justify=tk.CENTER) 
-                index_init.grid(row=4,column=1,padx=5)
+                index_end.insert(0, a)
+                index_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 index_end.configure(justify=tk.CENTER) 
                 index_end.grid(row=4,column=2)
 
@@ -940,26 +915,18 @@ class GUI(tk.Tk):
                 label4.grid(row=5,column=0,sticky='e')
 
                 # entry - init position
-                middle_init = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                middle_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][3]
-                if len(a) == 2:
-                    middle_init.insert(0, a[1]) #0 init entry
-                    middle_init.insert(0, a[0])
-                else:
-                     middle_init.insert(0, a)
+                middle_init.insert(0, a)
+                middle_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 middle_init.configure(justify=tk.CENTER) 
                 middle_init.grid(row=5,column=1,padx=5)
 
                 # entry - end position
-                middle_end = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                middle_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][3]
-                if len(a) == 2:
-                    middle_end.insert(0, a[1]) #0 init entry
-                    middle_end.insert(0, a[0])
-                else:
-                     middle_end.insert(0, a)
+                middle_end.insert(0, a)
+                middle_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 middle_end.configure(justify=tk.CENTER) 
                 middle_end.grid(row=5,column=2)
 
@@ -969,26 +936,18 @@ class GUI(tk.Tk):
                 label5.grid(row=6,column=0,sticky='e')
 
                 # entry - init position
-                ring_pinky_init = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                ring_pinky_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][4]
-                if len(a) == 2:
-                    ring_pinky_init.insert(0, a[1]) #0 init entry
-                    ring_pinky_init.insert(0, a[0])
-                else:
-                     ring_pinky_init.insert(0, a)
+                ring_pinky_init.insert(0, a)
+                ring_pinky_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 ring_pinky_init.configure(justify=tk.CENTER) 
                 ring_pinky_init.grid(row=6,column=1,padx=5)
 
                 # entry - end position
-                ring_pinky_end = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                ring_pinky_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][4]
-                if len(a) == 2:
-                    ring_pinky_end.insert(0, a[1]) #0 init entry
-                    ring_pinky_end.insert(0, a[0])
-                else:
-                     ring_pinky_end.insert(0, a)
+                ring_pinky_end.insert(0, a)
+                ring_pinky_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 ring_pinky_end.configure(justify=tk.CENTER) 
                 ring_pinky_end.grid(row=6,column=2)
                 
@@ -997,26 +956,18 @@ class GUI(tk.Tk):
                 label6.grid(row=7,column=0,sticky='e')
 
                 # entry - init position
-                forearm_init = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                forearm_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][5]
-                if len(a) == 2:
-                    forearm_init.insert(0, a[1]) #0 init entry
-                    forearm_init.insert(0, a[0])
-                else:
-                     forearm_init.insert(0, a)
+                forearm_init.insert(0, a)
+                forearm_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 forearm_init.configure(justify=tk.CENTER) 
                 forearm_init.grid(row=7,column=1,padx=5)
 
                 # entry - end position
-                forearm_end = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                forearm_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][5]
-                if len(a) == 2:
-                    forearm_end.insert(0, a[1]) #0 init entry
-                    forearm_end.insert(0, a[0])
-                else:
-                     forearm_end.insert(0, a)
+                forearm_end.insert(0, a)
+                forearm_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 forearm_end.configure(justify=tk.CENTER) 
                 forearm_end.grid(row=7,column=2)
 
@@ -1033,14 +984,18 @@ class GUI(tk.Tk):
                 label7.grid(row=9,column=0,sticky='e')
 
                 # entry - init time
-                time_init = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd2, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                time_init = tk.Entry(new_window, fg='black',validate="key")
+                a = selected_item_tree_view["values"][0][6]
+                time_init.insert(0, a)
+                time_init.config(validatecommand=(validate_cmd2, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 time_init.configure(justify=tk.CENTER) 
                 time_init.grid(row=9,column=1,padx=5)
 
                 # entry - end time
-                time_end = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd2, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                time_end = tk.Entry(new_window, fg='black',validate="key")
+                a = selected_item_tree_view["values"][1][6]
+                time_end.insert(0, a)
+                time_end.config(validatecommand=(validate_cmd2, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 time_end.configure(justify=tk.CENTER) 
                 time_end.grid(row=9,column=2)
 
@@ -1048,9 +1003,11 @@ class GUI(tk.Tk):
                 label8 = tk.Label(new_window, text="DeltaT (default 70ms)")
                 label8.grid(row=10,column=0,sticky='e',pady=10)
 
-                # entry - init time
-                deltaT = tk.Entry(new_window, fg='black',validate="key", 
-                                     validatecommand=(validate_cmd2, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                # entry delta t
+                deltaT = tk.Entry(new_window, fg='black',validate="key")
+                a = selected_item_tree_view["values"][2]
+                deltaT.insert(0, a)
+                deltaT.config(validatecommand=(validate_cmd2, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 deltaT.configure(justify=tk.CENTER) 
                 deltaT.grid(row=10,column=1,padx=5)
 
@@ -1065,7 +1022,6 @@ class GUI(tk.Tk):
                 # Button (save in RAM - elements_in_tree_view)
                 button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2)
                 button1.grid(row=11,column=0,pady=20,columnspan=4)
-
             
         
         
