@@ -499,8 +499,6 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
     for row in range(0, 6):
         for column in range(1, 5):
             values[(row)].append(entries[(row, column)].get())
-        
-    
     data = {
         "type": "sinusoidal",
         "values": [startTime.get(),endTime.get(),values[0],values[1],values[2],values[3],values[4],values[5],deltaT.get()]
@@ -777,7 +775,7 @@ class GUI(tk.Tk):
         button1.grid(row=11,column=0,pady=20,columnspan=4)
         
         
-    # *************************************** FRAME 3 CONFIGURATION ****************************************************
+    # *************************************** FRAME 3 CONFIGURATION - Create complex movement*******************************************
     def configure_frame3(self):
         # elements_in_tree_view -> contiene gli elementi "base" della tree_view in modo sequenziale (non innestato) assieme
         # ad alcune info.
@@ -1070,7 +1068,131 @@ class GUI(tk.Tk):
                 # Button (save in RAM - elements_in_tree_view)
                 button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2,command=lambda:save_l(init_list,end_list,time_init,time_end,deltaT))
                 button1.grid(row=11,column=0,pady=20,columnspan=4)
-            
+
+            if movement_type == "sinusoidal":
+                #nonlocal selected_item_tree_view
+                new_window = tk.Toplevel(self)
+                new_window.geometry("750x500")
+                new_window.title("Modify sinusoidal movement")
+                for i in range(13):
+                    new_window.grid_rowconfigure(i, weight=0)
+                
+                for i in range(7):
+                    new_window.grid_columnconfigure(i, weight=1)
+                    
+                #validation functions for entries (only digit)
+                validate_entries = new_window.register(on_validate2)
+                
+                title = tk.Label(new_window, text="Sinusoidal movement",font="8")
+                title.grid(row=0, column=0, pady=20, padx=2, columnspan=7)
+                
+                # amplitude, frequency, phase, deltaT, y_init
+                
+                amplitude_label = tk.Label(new_window, text="Amplitude(0-100)")
+                amplitude_label.grid(row=1, column=1)
+                
+                frequency_label = tk.Label(new_window, text="Frequency(mHz)")
+                frequency_label.grid(row=1, column=2)
+                
+                phase_label = tk.Label(new_window, text="Amp. Shift(-1,1)")
+                phase_label.grid(row=1, column=3)
+                
+                y_init_label = tk.Label(new_window, text="Start value(0-100)")
+                y_init_label.grid(row=1, column=4)
+                
+                # Label a sinistra della griglia per ogni riga
+                thumb_B_label = tk.Label(new_window, text= "Thumb(B)")
+                thumb_B_label.grid(row=2, column=0, padx=5, pady=5,sticky="e")
+                
+                thumb_L_label = tk.Label(new_window, text= "Thumb(L)")
+                thumb_L_label.grid(row=3, column=0, padx=5, pady=5,sticky="e")
+                
+                index_label = tk.Label(new_window, text= "Index")
+                index_label.grid(row=4, column=0, padx=5, pady=5,sticky="e")
+                
+                middle_label = tk.Label(new_window, text= "Middle")
+                middle_label.grid(row=5, column=0, padx=5, pady=5,sticky="e")
+                
+                TL_label = tk.Label(new_window, text= "Thumb/Little")
+                TL_label.grid(row=6, column=0, padx=5, pady=5,sticky="e")
+                
+                forearm_label = tk.Label(new_window, text= "Forearm")
+                forearm_label.grid(row=7, column=0, padx=5, pady=5,sticky="e")
+                
+                # Dizionario per memorizzare gli entry
+                entries = {}
+
+                # Creazione della griglia 4x4=16 campi di input (a cui vi si accede come fosse una matrice)
+                for i in range(2, 8):
+                    for j in range(1, 5):
+                        entry = tk.Entry(new_window, width=15, validate="key",
+                                        validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                        entry.grid(row=i, column=j, padx=10, pady=5)
+                        # Salva l'entry nel dizionario con una chiave unica
+                        entries[((i-2), j)] = entry
+                    
+                
+                
+                deltaT_label = tk.Label(new_window, text="deltaT (ms)")
+                deltaT_label.grid(row=10, column=1,pady=10,sticky="s")
+                
+                startTime_label = tk.Label(new_window, text="Start time(ms)")
+                startTime_label.grid(row=10, column=2,pady=10,sticky="s")
+                
+                endTime_label = tk.Label(new_window, text="End time(ms)")
+                endTime_label.grid(row=10, column=3,pady=10,sticky="s")
+                
+                #entry deltaT
+                deltaT_entry = tk.Entry(new_window,width=15, validate="key",
+                                    validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                deltaT_entry.grid(row=11, column=1, padx=5, pady=5)
+                
+                #entry startTime
+                startTime_entry = tk.Entry(new_window,width=15, validate="key",
+                                        validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                startTime_entry.grid(row=11, column=2, padx=5, pady=5)
+                
+                #entry endTime
+                endTime_entry = tk.Entry(new_window,width=15, validate="key",
+                                        validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                endTime_entry.grid(row=11, column=3, padx=5, pady=5)
+                
+                # Funzione per la modifica dei movimenti sinsuoidal 
+                def save_s(gui_instance,startTime,endTime,entries,deltaT):
+                    #entry_11 = entries[(row, column)].get() #access 
+                    
+                    #check empty values
+                    for row in range(0, 6):
+                        for column in range(1, 5):
+                            if entries[(row, column)].get() == '' or entries[(row, column)].get() is None:
+                                messagebox.showerror("Error", "Fill all fields")
+                                return
+                    if startTime.get() == '' or startTime.get() is None:
+                        messagebox.showerror("Error", "Fill start time field")
+                        return
+                    
+                    if endTime.get() == '' or endTime.get() is None:
+                        messagebox.showerror("Error", "Fill end time field")
+                        return
+                    
+                    
+                    # struttura di salvataggio : 6 liste -> thumbB, thumbL, index, middle, ring/pinky, forearm 
+                    # al cui interno hanno 4 valori ognuno (amplitude, freq, phase, y_inizio) -> startTime, endTime, lista[i], deltaT
+                    values = [[],[],[],[],[],[]]
+                    for row in range(0, 6):
+                        for column in range(1, 5):
+                            values[(row)].append(entries[(row, column)].get())
+                    '''data = {
+                        "type": "sinusoidal",
+                        "values": [startTime.get(),endTime.get(),values[0],values[1],values[2],values[3],values[4],values[5],deltaT.get()]
+                    } 
+                    save_movement(data) '''
+
+                # Button
+                button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2)
+                                #command=lambda: on_save_sinusoidal(self,startTime_entry,endTime_entry,entries,deltaT_entry))
+                button1.grid(row=12,column=0,pady=20, padx=15, columnspan=7)
+
         
         
         # inner functions
@@ -1085,12 +1207,12 @@ class GUI(tk.Tk):
                 return
                 
             if selected_item_tree_view["type"] == "sinusoidal":
-                #modify_window("sinusoidal")
-                print("da implementare")
+                modify_window("sinusoidal")
                 return
                 
             if selected_item_tree_view["type"] == "complex":
-                print("Il movimento complesso deve essere modificato sui mattoncini")
+                messagebox.showinfo("Info", "To change the values of a complex movement, act on the basic movements that make it up")
+                return;
             
             
             
@@ -1130,7 +1252,7 @@ class GUI(tk.Tk):
             for element in elements_in_tree_view:
                 element["index"] = get_index_by_id(element["id"])
         
-        # Used to see if the json import operation was successful and to populate the treeview
+        # Used to see if the json import operation was successful, and then populate the treeview
         def import_json_inner():
             
             # Recursive reading of the json
