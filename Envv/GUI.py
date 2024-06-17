@@ -1061,6 +1061,7 @@ class GUI(tk.Tk):
                             element["values"][1] = end_list_unpacked
                             element["values"][2] = deltaT.get()
                             new_window.destroy()
+                            selected_item_tree_view = None #empty the variabile of selected item
                             return
                     print("ERROR, the selected item does not exists")
                     new_window.destroy()
@@ -1069,7 +1070,7 @@ class GUI(tk.Tk):
                 button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2,command=lambda:save_l(init_list,end_list,time_init,time_end,deltaT))
                 button1.grid(row=11,column=0,pady=20,columnspan=4)
 
-            if movement_type == "sinusoidal":
+            if movement_type == "sinusoidal": #**********************************************
                 #nonlocal selected_item_tree_view
                 new_window = tk.Toplevel(self)
                 new_window.geometry("750x500")
@@ -1125,13 +1126,14 @@ class GUI(tk.Tk):
                 # Creazione della griglia 4x4=16 campi di input (a cui vi si accede come fosse una matrice)
                 for i in range(2, 8):
                     for j in range(1, 5):
-                        entry = tk.Entry(new_window, width=15, validate="key",
-                                        validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                        #entry = None
+                        entry = tk.Entry(new_window, width=15, validate="key")
+                        a = selected_item_tree_view["values"][i][j-1] #accesso
+                        entry.insert(0,a)
+                        entry.config(validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                         entry.grid(row=i, column=j, padx=10, pady=5)
                         # Salva l'entry nel dizionario con una chiave unica
                         entries[((i-2), j)] = entry
-                    
-                
                 
                 deltaT_label = tk.Label(new_window, text="deltaT (ms)")
                 deltaT_label.grid(row=10, column=1,pady=10,sticky="s")
@@ -1143,18 +1145,24 @@ class GUI(tk.Tk):
                 endTime_label.grid(row=10, column=3,pady=10,sticky="s")
                 
                 #entry deltaT
-                deltaT_entry = tk.Entry(new_window,width=15, validate="key",
-                                    validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                deltaT_entry = tk.Entry(new_window,width=15, validate="key")
+                a = selected_item_tree_view["values"][8]
+                deltaT_entry.insert(0,a)
+                deltaT_entry.config(validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 deltaT_entry.grid(row=11, column=1, padx=5, pady=5)
                 
                 #entry startTime
-                startTime_entry = tk.Entry(new_window,width=15, validate="key",
-                                        validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                startTime_entry = tk.Entry(new_window,width=15, validate="key")
+                a = selected_item_tree_view["values"][0]
+                startTime_entry.insert(0,a)
+                startTime_entry.config(validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 startTime_entry.grid(row=11, column=2, padx=5, pady=5)
                 
                 #entry endTime
-                endTime_entry = tk.Entry(new_window,width=15, validate="key",
-                                        validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                endTime_entry = tk.Entry(new_window,width=15, validate="key")
+                a = selected_item_tree_view["values"][1]
+                endTime_entry.insert(0,a)
+                endTime_entry.config(validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 endTime_entry.grid(row=11, column=3, padx=5, pady=5)
                 
                 # Funzione per la modifica dei movimenti sinsuoidal 
@@ -1178,19 +1186,25 @@ class GUI(tk.Tk):
                     
                     # struttura di salvataggio : 6 liste -> thumbB, thumbL, index, middle, ring/pinky, forearm 
                     # al cui interno hanno 4 valori ognuno (amplitude, freq, phase, y_inizio) -> startTime, endTime, lista[i], deltaT
-                    values = [[],[],[],[],[],[]]
-                    for row in range(0, 6):
-                        for column in range(1, 5):
-                            values[(row)].append(entries[(row, column)].get())
-                    '''data = {
-                        "type": "sinusoidal",
-                        "values": [startTime.get(),endTime.get(),values[0],values[1],values[2],values[3],values[4],values[5],deltaT.get()]
-                    } 
-                    save_movement(data) '''
+                    nonlocal elements_in_tree_view
+                    nonlocal selected_item_tree_view
+                    nonlocal new_window
+                    for element in elements_in_tree_view:
+                        if element["id"] == selected_item_tree_view["id"]:
+                            for i in range(2, 8):
+                                for j in range(0, 4):
+                                    element["values"][i][j] = entries[(i-2, j+1)].get()
+                            element["values"][0] = startTime.get()
+                            element["values"][1] = endTime.get()
+                            element["values"][8] = deltaT.get()
+                            new_window.destroy()
+                            return
+                    print("Error in save_s sinusoidal")
+                    return
 
                 # Button
-                button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2)
-                                #command=lambda: on_save_sinusoidal(self,startTime_entry,endTime_entry,entries,deltaT_entry))
+                button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2,
+                                command=lambda: save_s(self,startTime_entry,endTime_entry,entries,deltaT_entry))
                 button1.grid(row=12,column=0,pady=20, padx=15, columnspan=7)
 
         
