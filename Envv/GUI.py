@@ -1209,8 +1209,7 @@ class GUI(tk.Tk):
 
         
         
-        # inner functions
-        # funzione per editare un movimento
+        # funzione per modificare i valori di un movimento base
         def modify():
             print(selected_item_tree_view)
             if selected_item_tree_view is None:
@@ -1226,7 +1225,7 @@ class GUI(tk.Tk):
                 
             if selected_item_tree_view["type"] == "complex":
                 messagebox.showinfo("Info", "To change the values of a complex movement, act on the basic movements that make it up")
-                return;
+                return
             
 
         #funzione per modificare un movimento in modo rapido  
@@ -1298,15 +1297,15 @@ class GUI(tk.Tk):
                         twc = []
                         for a in (movement[1]['values']):
                             #recursive tree_view reconstruction
-                            twc.append(["->",a])
+                            twc.append([">",a])
                         #recursion
                         recursive_reading(id_element,twc)
                         father_id = None
 
             if import_json() is True:
-                tree.delete(*tree.get_children()) #empty the treeview
-                nonlocal elements_in_tree_view
-                elements_in_tree_view.clear()
+                #tree.delete(*tree.get_children()) #empty the treeview
+                #nonlocal elements_in_tree_view
+                #elements_in_tree_view.clear() #empty the RAM
                 global tree_view
                 recursive_reading(None, tree_view)
                 update_index() #updating indexes
@@ -1357,7 +1356,6 @@ class GUI(tk.Tk):
                     print("id: " + str(selected_item_tree_view["id"]) + 
                           " index: " + str(selected_item_tree_view["index"]) + 
                           " root: " + str(selected_item_tree_view["root"]))
-
                     return
               
         #delete an item from treeview 
@@ -1374,7 +1372,16 @@ class GUI(tk.Tk):
             elements_in_tree_view = [dizionario for dizionario in elements_in_tree_view if id_item not in dizionario]
             id_item = None
             print(elements_in_tree_view)
-                    
+        
+        #empty elements_in_tree_view(ram) and tree_view 
+        def clear_all():
+            nonlocal id_item
+            nonlocal elements_in_tree_view   
+            nonlocal tree
+            id_item = None
+            tree.delete(*tree.get_children()) #empty the treeview
+            elements_in_tree_view.clear() #empty the RAM
+            #print(elements_in_tree_view)
             
         # Aggiungere Menubuttons al frame
         file_button = ttk.Menubutton(self.frame3, text="Edit")
@@ -1407,6 +1414,10 @@ class GUI(tk.Tk):
         
         button_delete = tk.Button(self.frame3, text="Delete", command=delete_item)
         button_delete.grid(row=1,column=3)
+
+        button_clear_all = tk.Button(self.frame3, text="Clear all",
+                                 command=lambda: clear_all())
+        button_clear_all.grid(row=1,column=4)
         
         button_up = tk.Button(self.frame3, text="Up",command=move_up)
         button_up.grid(row=4,column=0)
