@@ -1228,15 +1228,7 @@ class GUI(tk.Tk):
                 messagebox.showinfo("Info", "To change the values of a complex movement, act on the basic movements that make it up")
                 return;
             
-            
-            
-            
-            
-            
-                
-                
-            
-            
+
         #funzione per modificare un movimento in modo rapido  
         #l'idea è quella di poter modificare tutti i movimenti base
         #Di un movimento complesso dunque posso scalare 
@@ -1252,7 +1244,7 @@ class GUI(tk.Tk):
             print("da implementare")
             
         
-        # return the index on the treeview (level) of an element in the treeview given the id of the item
+        # return the index of an element in the treeview, given the id of the item
         def get_index_by_id(item_id):
             nonlocal tree
             if item_id in tree.get_children():
@@ -1264,84 +1256,67 @@ class GUI(tk.Tk):
         #update the indexes (levels) of the elements in treeview (called on import json or click "up" or "down")
         def update_index():
             for element in elements_in_tree_view:
+                print("-----------------------------------------------------------------------")
                 element["index"] = get_index_by_id(element["id"])
+                print(element)
         
         # Used to see if the json import operation was successful, and then populate the treeview
         def import_json_inner():
-            
             # Recursive reading of the json
             def recursive_reading(father_id, t_w):
                 for movement in t_w:
-                    if(movement[1]['type'] == 'linear'):    
+                    if(movement[1]['type'] == 'linear'):  
+                        a = " - Type: Linear movement"
+                        b = movement[0]
+                        c = b + a 
+                        id_element = None
                         if father_id is None:
-                            a = " - Type: Linear movement"
-                            b = movement[0]
-                            c = b + a
                             id_element = tree.insert("", "end", text=c)
-                            elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
-                                                          "type":"linear","index":None, "root":(tree.parent(id_element))})
                         else:
-                            a = " Type: Linear movement"
-                            b = movement[0]
-                            c = b + a
                             id_element = tree.insert(father_id, "end", text=c)
-                            elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
-                                                          "type":"linear","index":None,"root":(tree.parent(id_element))})
+                        elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
+                                                          "type":"linear","index":None, "root":(tree.parent(id_element))})
                         
                     elif(movement[1]['type'] == 'sinusoidal'):
+                        a = " - Type: Sinusoidal movement"
+                        b = movement[0]
+                        c = b + a
+                        id_element = None
                         if father_id is None:
-                            a = " - Type: Sinusoidal movement"
-                            b = movement[0]
-                            c = b + a
                             id_element = tree.insert("", "end", text=c)
-                            elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
-                                                          "type":"sinusoidal","index":None,"root":(tree.parent(id_element))})
                         else:
-                            a = " Type: Sinusoidal movement"
-                            b = movement[0]
-                            c = b + a
                             id_element = tree.insert(father_id, "end", text=c)
-                            elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
+                        elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
                                                           "type":"sinusoidal","index":None,"root":(tree.parent(id_element))})
-                        
                     
                     elif(movement[1]['type'] == 'complex'):
                         # se il movimento è complesso, faccio una copia una nuova lista
                         # che popolo con i sotto-movimenti che passo ricorsivamente a 
                         # recursive_reading
+                        a = " - Type: Complex movement"
+                        b = movement[0]
+                        c = b + a
+                        id_element = None
                         if father_id is None:
-                            a = " - Type: Complex movement"
-                            b = movement[0]
-                            c = b + a
                             id_element = tree.insert("", "end", text=c)
-                            elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
-                                                          "type":"complex","index":None,"root":(tree.parent(id_element))})
-                            twc = []
-                            for a in (movement[1]['values']):
-                                #recursive tree_view reconstruction
-                                twc.append(["->",a])
-                            #recursion
-                            recursive_reading(id_element,twc)
-                            father_id = None
                         else:
-                            a = " Type: Complex movement"
-                            b = movement[0]
-                            c = b + a
                             id_element = tree.insert(father_id, "end", text=c)
-                            elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
-                                                          "type":"complex","index":None,"root":(tree.parent(id_element))})
-                            twc = []
-                            for a in (movement[1]['values']):
-                                #recursive tree_view reconstruction
-                                twc.append(["->",a])
-                            #recursion
-                            recursive_reading(id_element,twc)
-                            father_id = None
-                
+
+                        #elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
+                                                        #"type":"complex","index":None,"root":(tree.parent(id_element))})
+                        twc = []
+                        for a in (movement[1]['values']):
+                            #recursive tree_view reconstruction
+                            twc.append(["->",a])
+                        #recursion
+                        recursive_reading(id_element,twc)
+                        father_id = None
+
                 update_index()
-                #print(elements_in_tree_view)
             if import_json() is True:
                 tree.delete(*tree.get_children()) #empty the treeview
+                nonlocal elements_in_tree_view
+                elements_in_tree_view.clear()
                 global tree_view
                 recursive_reading(None, tree_view)
             else:
@@ -1384,13 +1359,14 @@ class GUI(tk.Tk):
             
             nonlocal id_item
             id_item = tree.selection()[0] #id dell'item selezionato
+            print(id_item)
             #elements_in_tree_view è una list di dizionari
             for element in elements_in_tree_view:
                 if id_item == element["id"]:
                     nonlocal selected_item_tree_view
                     #selected_item_tree_view.clear()
                     selected_item_tree_view = element.copy()
-                    print(selected_item_tree_view)
+                    #print(selected_item_tree_view)
                     return
               
         #delete an item from treeview 
@@ -1405,7 +1381,8 @@ class GUI(tk.Tk):
             tree.delete(id_item)
             #elimino l'elemento anche da elements_in_tree_view
             elements_in_tree_view = [dizionario for dizionario in elements_in_tree_view if id_item not in dizionario]
-            #print(elements_in_tree_view)
+            id_item = None
+            print(elements_in_tree_view)
                     
             
         # Aggiungere Menubuttons al frame
@@ -1437,8 +1414,7 @@ class GUI(tk.Tk):
                                      command=lambda: visualize_movement(self.frame3, selected_item_tree_view))
         button_visualize.grid(row=1,column=2)
         
-        button_delete = tk.Button(self.frame3, text="Delete",
-                                 command=delete_item)
+        button_delete = tk.Button(self.frame3, text="Delete", command=delete_item)
         button_delete.grid(row=1,column=3)
         
         button_up = tk.Button(self.frame3, text="Up",command=move_up)
