@@ -1243,22 +1243,13 @@ class GUI(tk.Tk):
         def save_complex_movement():
             print("da implementare")
             
-        
-        # return the index of an element in the treeview, given the id of the item
-        def get_index_by_id(item_id):
-            nonlocal tree
-            if item_id in tree.get_children():
-                index = tree.index(item_id)
-                return index
-            else:
-                return None
             
         #update the indexes (levels) of the elements in treeview (called on import json or click "up" or "down")
         def update_index():
-            for element in elements_in_tree_view:
-                print("-----------------------------------------------------------------------")
-                element["index"] = get_index_by_id(element["id"])
-                print(element)
+            nonlocal tree
+            for item in elements_in_tree_view:
+                item['index'] = tree.index(item['id'])
+
         
         # Used to see if the json import operation was successful, and then populate the treeview
         def import_json_inner():
@@ -1312,13 +1303,13 @@ class GUI(tk.Tk):
                         recursive_reading(id_element,twc)
                         father_id = None
 
-                update_index()
             if import_json() is True:
                 tree.delete(*tree.get_children()) #empty the treeview
                 nonlocal elements_in_tree_view
                 elements_in_tree_view.clear()
                 global tree_view
                 recursive_reading(None, tree_view)
+                update_index() #updating indexes
             else:
                 return      
                 
@@ -1334,7 +1325,6 @@ class GUI(tk.Tk):
                 if index > 0:
                     tree.move(item_id, parent_id, index-1)
                 update_index()
-                #print(elements_in_tree_view)
                     
         # move a selected element of the treeview down  
         def move_down():
@@ -1347,7 +1337,6 @@ class GUI(tk.Tk):
                 if index < len(children) - 1:
                     tree.move(item_id, parent_id, index+1)
                 update_index()
-                #print(elements_in_tree_view)
         
         
         # Function called when an element of the treeview is selected
@@ -1359,14 +1348,16 @@ class GUI(tk.Tk):
             
             nonlocal id_item
             id_item = tree.selection()[0] #id dell'item selezionato
-            print(id_item)
             #elements_in_tree_view è una list di dizionari
             for element in elements_in_tree_view:
                 if id_item == element["id"]:
                     nonlocal selected_item_tree_view
                     #selected_item_tree_view.clear()
                     selected_item_tree_view = element.copy()
-                    #print(selected_item_tree_view)
+                    print("id: " + str(selected_item_tree_view["id"]) + 
+                          " index: " + str(selected_item_tree_view["index"]) + 
+                          " root: " + str(selected_item_tree_view["root"]))
+
                     return
               
         #delete an item from treeview 
