@@ -13,7 +13,7 @@ class Movement(ABC):
     def discretize(self):
         pass
 
-# fromPos and toPos are two list
+# fromPos and toPos are two lists
 class LinearMovement(Movement):
     def __init__(self, startTime, endTime, fromPos, toPos, deltaT=70):
         super().__init__(startTime, endTime)
@@ -47,7 +47,7 @@ class SinusoidalMovement(Movement):
     # startTime, endTime in MILLISECONDS
     # amplitude in (0-100)
     # frequency in HZ
-    # phase in RADIANT (-1,1)
+    # phase(or amplitude shift) in RADIANT (-1,1)
     # deltaT sampling period in SECONDS (periodo di campionamento in secondi) - 0.065
     # y_init starting point of the sinusoid on the y axis
     def __init__(self, startTime, endTime, amplitude, frequency, phase, y_init,deltaT=70):

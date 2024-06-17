@@ -246,23 +246,12 @@ class Table(tk.Frame):
         self.tree.pack(expand=True, fill="both")
         
         
-#legge valori dal movements.json che contiene i movimenti salvati***********************
-def read_json():
-    try:
-        with open("movements.json", 'r') as file:
-            data = json.load(file)
-        return data
-    except FileNotFoundError:
-        print("File not found")
-        return None
-    except json.JSONDecodeError as e:
-        print("Parsing error in the json file:", e)
-        return None
-        
 # Prepare the data for discretization, and then call the corresponding discretize **************************
 def pre_discretize(item):
-    
-    if len(item) == 0:  # Se la lunghezza del dizionario è 0, è vuoto
+    if item is None:
+        return None
+
+    if len(item) == 0:  # Se la lunghezza del dizionario è 0, è vuoto oppure è None
         return None
     
     if item["type"] == "linear":
@@ -348,10 +337,7 @@ def execute_movement(item):
         global arduino
         arduino.write(bytearray(fingers_data_mapped))       
         
-        
-        
-        
-    
+          
 #funzione per visualizzare un movimento in frame3*************************************************************
 def visualize_movement(gui_instance,item):
     movement_name="Movement"
@@ -1066,7 +1052,7 @@ class GUI(tk.Tk):
                     print("ERROR, the selected item does not exists")
                     new_window.destroy()
                     return
-                # Button (save in RAM - elements_in_tree_view)
+                # Button in new window for saving changes
                 button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2,command=lambda:save_l(init_list,end_list,time_init,time_end,deltaT))
                 button1.grid(row=11,column=0,pady=20,columnspan=4)
 
@@ -1202,7 +1188,7 @@ class GUI(tk.Tk):
                     print("Error in save_s sinusoidal")
                     return
 
-                # Button
+                # Button in new window for saving changes
                 button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2,
                                 command=lambda: save_s(self,startTime_entry,endTime_entry,entries,deltaT_entry))
                 button1.grid(row=12,column=0,pady=20, padx=15, columnspan=7)
@@ -1228,11 +1214,48 @@ class GUI(tk.Tk):
                 return
             
 
-        #funzione per modificare un movimento in modo rapido  
-        #l'idea è quella di poter modificare tutti i movimenti base
-        #Di un movimento complesso dunque posso scalare 
-        def scale():
-            print("scale")
+        # function for scaling of a movement of 1.5x, 2x or 0.5x
+        # value is a float
+        def scale(value):
+            if selected_item_tree_view is None:
+                messagebox.showerror("Error", "Select a movement")
+                return
+            
+            #check the type of the selected movement
+            type = selected_item_tree_view["type"]
+            if type == "linear":
+                print("linear")
+
+            if type == "sinusoidal":
+                print("sinusoidal")
+
+            if type == "complex":
+                print("complex")
+
+        ## function for scaling of a movement of a specific value
+        def scale_specific():
+            if selected_item_tree_view is None:
+                messagebox.showerror("Error", "Select a movement")
+                return
+            
+            def on_click_specific(window_instance,entry):
+                val = float(entry.get())
+                #TO-DO....................
+                print(val)
+                window_instance.destroy()
+                return
+            
+            input_window = tk.Toplevel(self)
+            input_window.title("Insert specific value")
+            input_window.geometry("300x100")  
+
+            # input entry
+            entry = tk.Entry(input_window, width=30)  
+            entry.pack(pady=20)  
+            button = tk.Button(input_window, text="Submit", width=10, command=lambda: on_click_specific(input_window,entry))
+            button.pack(pady=10)
+
+
             
         #inverte i valori del movimento
         def flip():
@@ -1393,10 +1416,10 @@ class GUI(tk.Tk):
         
         # Creazione del sottomenu per "Scale"
         modify_menu = Menu(file_menu, tearoff=0)
-        modify_menu.add_command(label="1.5x")
-        modify_menu.add_command(label="2x")
-        modify_menu.add_command(label="0.5x")
-        modify_menu.add_command(label="Specific")
+        modify_menu.add_command(label="1.5x",command=lambda: scale(1.5))
+        modify_menu.add_command(label="2x",command=lambda: scale(2.0))
+        modify_menu.add_command(label="0.5x",command=lambda: scale(0.5))
+        modify_menu.add_command(label="Specific",command=lambda: scale_specific())
         file_menu.add_cascade(label="Scale", menu=modify_menu)
         
         file_menu.add_command(label="Flip", command=flip)
