@@ -150,6 +150,16 @@ def on_validate2(action, index, value_if_allowed, prior_value, text, validation_
             return False
     else:
         return True
+    
+#Funzione per valdiare campi che accettano float (es. scala specifico)
+def validate_float_input(text):
+    if text.strip() == "":
+        return True  # Accetta l'input vuoto
+    try:
+        float(text)
+        return True
+    except ValueError:
+        return False
 
 # Funzione per il pulsante esegui movimento nel FRAME1 della GUI
 def on_submit(gui_instance):
@@ -1223,14 +1233,39 @@ class GUI(tk.Tk):
             
             #check the type of the selected movement
             type = selected_item_tree_view["type"]
+
             if type == "linear":
-                print("linear")
+                #update the selected movement
+                old_val_init = float(selected_item_tree_view["values"][0][6])
+                selected_item_tree_view["values"][0][6] = int(old_val_init*value)
+
+                old_val_end = float(selected_item_tree_view["values"][1][6])
+                selected_item_tree_view["values"][1][6] = int(old_val_end*value)
+
+                #update the ram
+                for mov in elements_in_tree_view:
+                    if mov["id"] == selected_item_tree_view["id"]:
+                        mov = selected_item_tree_view.copy()
+                messagebox.showinfo("Info", "Updated movement")
+                return
 
             if type == "sinusoidal":
-                print("sinusoidal")
+                #update the selected movement
+                old_val_init = float(selected_item_tree_view["values"][0])
+                selected_item_tree_view["values"][0] = int(old_val_init*value)
+
+                old_val_end = float(selected_item_tree_view["values"][1])
+                selected_item_tree_view["values"][1] = int(old_val_end*value)
+
+                #update the ram
+                for mov in elements_in_tree_view:
+                    if mov["id"] == selected_item_tree_view["id"]:
+                        mov = selected_item_tree_view.copy()
+                messagebox.showinfo("Info", "Updated movement")
+                return
 
             if type == "complex":
-                print("complex")
+                print("complex da implementare")
 
         ## function for scaling of a movement of a specific value
         def scale_specific():
@@ -1239,18 +1274,24 @@ class GUI(tk.Tk):
                 return
             
             def on_click_specific(window_instance,entry):
-                val = float(entry.get())
-                #TO-DO....................
-                print(val)
-                window_instance.destroy()
-                return
+                input = entry.get()
+                if input == "" or input is None:
+                    messagebox.showerror("Error", "The entry was empty")
+                    window_instance.destroy()
+                    return
+                else:
+                    window_instance.destroy()
+                    scale(float(input))
+                    return
             
             input_window = tk.Toplevel(self)
             input_window.title("Insert specific value")
             input_window.geometry("300x100")  
 
             # input entry
-            entry = tk.Entry(input_window, width=30)  
+            float_validator = input_window.register(validate_float_input)
+
+            entry = tk.Entry(input_window, width=30, validate="key", validatecommand=(float_validator, '%P'))  
             entry.pack(pady=20)  
             button = tk.Button(input_window, text="Submit", width=10, command=lambda: on_click_specific(input_window,entry))
             button.pack(pady=10)
@@ -1375,9 +1416,11 @@ class GUI(tk.Tk):
                     nonlocal selected_item_tree_view
                     #selected_item_tree_view.clear()
                     selected_item_tree_view = element.copy()
-                    print("id: " + str(selected_item_tree_view["id"]) + 
+                    '''print("id: " + str(selected_item_tree_view["id"]) + 
                           " index: " + str(selected_item_tree_view["index"]) + 
-                          " root: " + str(selected_item_tree_view["root"]))
+                          " root: " + str(selected_item_tree_view["root"]))'''
+                    print(selected_item_tree_view)
+                    print("------------------")
                     return
               
         #delete an item from treeview 
@@ -1395,9 +1438,7 @@ class GUI(tk.Tk):
             elements_in_tree_view = [diz for diz in elements_in_tree_view if diz['root'] != id_item]
             id_item = None
             update_index()
-            for i in elements_in_tree_view:
-                print(i)
-                print("-------------------------------------------------")
+
         
         #empty elements_in_tree_view(ram) and tree_view 
         def clear_all():
