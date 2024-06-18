@@ -1057,7 +1057,6 @@ class GUI(tk.Tk):
                             element["values"][1] = end_list_unpacked
                             element["values"][2] = deltaT.get()
                             new_window.destroy()
-                            selected_item_tree_view = None #empty the variabile of selected item
                             return
                     print("ERROR, the selected item does not exists")
                     new_window.destroy()
