@@ -1315,8 +1315,7 @@ class GUI(tk.Tk):
                         else:
                             id_element = tree.insert(father_id, "end", text=c)
 
-                        #elements_in_tree_view.append({"id":id_element,"values":(movement[1]['values']),
-                                                        #"type":"complex","index":None,"root":(tree.parent(id_element))})
+                        elements_in_tree_view.append({"id":id_element,"type":"complex","index":None,"root":(tree.parent(id_element))})
                         twc = []
                         for a in (movement[1]['values']):
                             #recursive tree_view reconstruction
@@ -1384,17 +1383,21 @@ class GUI(tk.Tk):
         #delete an item from treeview 
         def delete_item():
             nonlocal id_item
-            nonlocal elements_in_tree_view
             if id_item is None:
                 messagebox.showerror("Error", "Select a movement to delete")
                 return
-            for item in tree.selection():
-                tree.selection_remove(item)
-            tree.delete(id_item)
-            #elimino l'elemento anche da elements_in_tree_view
-            elements_in_tree_view = [dizionario for dizionario in elements_in_tree_view if id_item not in dizionario]
+
+            tree.delete(id_item) #delete the element from the treeview
+
+            nonlocal elements_in_tree_view
+            #elimino l'elemento anche da elements_in_tree_view ricorsivamente con i figli
+            elements_in_tree_view = [diz for diz in elements_in_tree_view if diz['id'] != id_item]
+            elements_in_tree_view = [diz for diz in elements_in_tree_view if diz['root'] != id_item]
             id_item = None
-            print(elements_in_tree_view)
+            update_index()
+            for i in elements_in_tree_view:
+                print(i)
+                print("-------------------------------------------------")
         
         #empty elements_in_tree_view(ram) and tree_view 
         def clear_all():
