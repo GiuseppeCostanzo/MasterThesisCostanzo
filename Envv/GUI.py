@@ -13,9 +13,11 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
 import copy
 
-# Customized classes for linear and sinusoidal movements (in the same folder)
-from Movement_file_class import LinearMovement 
-from Movement_file_class import SinusoidalMovement
+# Other files (must be in the same folder of GUI.py)
+from Discretizer import LinearMovement 
+from Discretizer import SinusoidalMovement
+from Discretizer import ComplexMovement
+from Utility import Table
 
 # Global parameters, eventually to be set
 usbport = 'COM7' # Usb port where arduino is connected 
@@ -23,7 +25,7 @@ arduino = None # Arduino communication instance
 baud = 38400 # Baud - speed parameter for arduino comm. (MUST BE the same value in the arduino sketch)
 
 # Internal usage
-start_time = None # used to calculate the time start of the button)
+start_time = None # used to calculate the time start of the button
 tree_view = [] #for visualizing the imported json in complex movement frame3
 
 # This 2 functions maps an input value (in range 0-100) to the corresponding value on the servo, accordingly to the 
@@ -228,33 +230,7 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
         "values": [init_list_unpacked,end_list_unpacked,deltaT.get()]
     }
     save_movement(data)
-    
-# Classe per la creazione della tabella per visualizzare i movimenti in FRAME 3
-class Table(tk.Frame):
-    def __init__(self, master, headers, data):
-        super().__init__(master)
-        self.headers = headers
-        self.data = data
-        self.create_table()
-
-    def create_table(self):
-        self.tree = ttk.Treeview(self, columns=self.headers, show="headings")
-
-        # Aggiunta header
-        for header in self.headers:
-            self.tree.heading(header, text=header, anchor="center")
-            self.tree.column(header, width=80)
-
-        for row in self.data:
-            self.tree.insert("", "end", values=row)
-
-        # Scrollbar
-        vsb = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=vsb.set)
-        vsb.pack(side="right", fill="y")
-
-        self.tree.pack(expand=True, fill="both")
-        
+     
         
 # Prepare the data for discretization, and then call the corresponding discretize **************************
 def pre_discretize(item):
@@ -308,21 +284,15 @@ def pre_discretize(item):
         
         sinMov = SinusoidalMovement(start_time,end_time,amplitude,frequency,phase,start_value_y,deltaT)
         movement = (sinMov.discretize()).tolist()
-        return movement
+        return movement    
         
-   
-    if item["type"] == "complex":
-        print("movimento complesso")
-        
-        
-# funzione per eseguire un movimento salvato **************************************************************
+# funzione per eseguire un movimento base salvato **************************************************************
 def execute_movement(item):
     print(item)
     movement = pre_discretize(item)
     if movement is None:
         messagebox.showerror("Error", "Select or import a movement")
         return 
-        
     
     global start_time
     start_time = time.time()
@@ -350,16 +320,14 @@ def execute_movement(item):
           
 #funzione per visualizzare un movimento in frame3*************************************************************
 def visualize_movement(gui_instance,item):
-    movement_name="Movement"
     movement = pre_discretize(item)
     if movement is None:
         messagebox.showerror("Error", "Select or import a movement")
         return 
     
-    
     # Creazione della finestra di input
     input_window = tk.Toplevel(gui_instance)
-    input_window.title(movement_name)
+    input_window.title("Movement")
     input_window.geometry("700x800")
     input_window.pack_propagate(False)  # Per evitare che la finestra si ridimensioni in base al contenuto
     
@@ -374,8 +342,8 @@ def visualize_movement(gui_instance,item):
     frame2.pack_propagate(True) 
     create_plot(frame2,movement)
     
+# Creazione del plot
 def create_plot(master, movement):
-    #figure = Figure(figsize=(8, 6), dpi=75)
     figure = Figure(figsize=(50, 50), dpi=75)
     #plot = figure.add_subplot(111)
     plot = figure.add_axes([0.08, 0.13, 0.85, 0.85])
@@ -418,36 +386,6 @@ def create_plot(master, movement):
 
     canvas = FigureCanvasTkAgg(figure, master)
     canvas.get_tk_widget().pack(expand=True, fill="both")
-
-
-
-    
-# funzione per eliminare un movimento
-def delete_movement(gui_instance,movement_to_delete):
-    
-    # Carica i dati esistenti dal file JSON se esiste
-    if os.path.exists("movements.json"):
-        #Se il file esiste, apro il file
-        with open("movements.json", 'r') as file_json:
-            dati = json.load(file_json)
-            
-        if movement_to_delete in dati:
-            del dati[movement_to_delete]
-            
-            # Save the updated dictionary
-            with open("movements.json", "w") as json_file:
-                json.dump(dati, json_file)
-                
-            #Re-call the frame3 for the update
-            gui_instance.show_frame(gui_instance.frame3)
-            return True
-            
-        else:
-            print(f"The movement '{movement_to_delete}' does not exists")
-            return False
-    else:
-        print("The file movements.json does not exists")
-        return False
     
 # import json
 def import_json():
@@ -500,6 +438,32 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
         "values": [startTime.get(),endTime.get(),values[0],values[1],values[2],values[3],values[4],values[5],deltaT.get()]
     } 
     save_movement(data) 
+
+# Funzione per il salvataggio dei movimenti complessi in frame3
+# Attenzione all'ordine di salvataggio nel json
+def on_save_complex(items):
+    data = {
+        "type": "complex",
+        "values": []
+    }
+
+    def recursive_save(data,items):
+        i = 0
+        data = {
+            "type": "complex",
+            "values": []
+        }
+
+    i = 0
+    for elements in items:
+        if(elements["index"]==i):
+            if(elements["type"] == "linear"):
+                print("a")
+            elif(elements["type"] == "sinusoidal"):
+                print("a")
+            elif(elements["type"] == "complex")
+
+
 
 
 
@@ -1301,10 +1265,6 @@ class GUI(tk.Tk):
         def flip():
             print("flip")
             
-        # salva un movimento complesso
-        def save_complex_movement():
-            print("da implementare")
-            
             
         #update the indexes (levels) of the elements in treeview (called on import json or click "up" or "down")
         def update_index():
@@ -1491,7 +1451,7 @@ class GUI(tk.Tk):
         button_down = tk.Button(self.frame3, text="Down",command=move_down)
         button_down.grid(row=5,column=0)
         
-        button_save = tk.Button(self.frame3, text="Save",command=save_complex_movement)
+        button_save = tk.Button(self.frame3, text="Save",command=lambda: on_save_complex(elements_in_tree_view))
         button_save.grid(row=8,column=0)
         
         

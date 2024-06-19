@@ -86,3 +86,11 @@ class SinusoidalMovement(Movement):
             
         matrix = y.astype(np.int64) #to int
         return matrix.T 
+    
+class ComplexMovement(Movement):
+        def __init__(self, startTime, endTime):
+            super().__init__(startTime, endTime)
+
+
+        def discretize(self):
+            print("discretize complesso")
