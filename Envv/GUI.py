@@ -95,7 +95,7 @@ def save_movement(data):
     if file_path:
         # Scrive i dati JSON nel file selezionato
         with open(file_path, 'w', encoding='utf-8') as json_file:
-            json.dump(data, json_file, ensure_ascii=False)
+            json.dump(data, json_file, ensure_ascii=False, indent=1)
         print(f"File JSON salvato in: {file_path}")
     else:
         print("Salvataggio annullato.")
@@ -441,31 +441,57 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
 
 # Funzione per il salvataggio dei movimenti complessi in frame3
 # Attenzione all'ordine di salvataggio nel json
-def on_save_complex(items):
+def on_save_complex(itemsInput):
+    items = list(itemsInput)
+    if not items:
+        messagebox.showerror("Error", "Import at least one movement")
+        return False
+
     data = {
         "type": "complex",
         "values": []
     }
 
-    def recursive_save(data,items):
-        i = 0
-        data = {
-            "type": "complex",
-            "values": []
-        }
+    def recursive_save(data,items,root):
+        i = 0 #index/level of the movements
+        find = False
+        while items :
+            n = 0
+            for element in items:
+                if(element["index"]==i and element["root"] == root):
+                    if(element["type"] == "linear"):
+                        new_values = element["values"]
+                        data_l = {
+                            "type": "linear",
+                            "values": new_values 
+                        }
+                        data["values"].append(data_l)
+                        i = i+1 
+                        break 
+                    elif(element["type"] == "sinusoidal"):
+                        new_values = element["values"]
+                        data_s = {
+                            "type": "sinusoidal",
+                            "values": new_values 
+                        }
+                        data["values"].append(data_s)
+                        i = i+1  
+                        break 
+                    elif(element["type"] == "complex"):
+                        id_father = element["id"]
+                        sub_movements = recursive_save(data,items,root=id_father)
+                        data["values"].append(sub_movements)
+                        i = i+1  
+                        break
+                else:
+                    n = n+1
+            items.pop(n)
+            #ricordarsi di fare pop ricorsivo id
+        return data
 
-    i = 0
-    for elements in items:
-        if(elements["index"]==i):
-            if(elements["type"] == "linear"):
-                print("a")
-            elif(elements["type"] == "sinusoidal"):
-                print("a")
-            elif(elements["type"] == "complex")
-
-
-
-
+    recursive_save(data,items,'')
+    save_movement(data)
+    return True
 
 
 # ------------------------------- GUI -----------------------------------------------------------------------------------------
