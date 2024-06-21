@@ -454,10 +454,14 @@ def on_save_complex(itemsInput):
 
     def recursive_save(data,items,root):
         i = 0 #index/level of the movements
-        find = False
         while items :
-            n = 0
+            #n = 0
+            index_list = 0
             for element in items:
+                index_list = next((ii for ii, d in enumerate(items) if d.get("index") == i), None)
+                print("Elementi in items:" + str(items))
+                print("Valore di i da cercare: " + str(i))
+                print("Posizione nella lista dell'elemento: " + str(index_list))
                 if(element["index"]==i and element["root"] == root):
                     if(element["type"] == "linear"):
                         new_values = element["values"]
@@ -467,6 +471,7 @@ def on_save_complex(itemsInput):
                         }
                         data["values"].append(data_l)
                         i = i+1 
+                        print("Aggiunto movimento lineare. Break")
                         break 
                     elif(element["type"] == "sinusoidal"):
                         new_values = element["values"]
@@ -476,17 +481,25 @@ def on_save_complex(itemsInput):
                         }
                         data["values"].append(data_s)
                         i = i+1  
+                        print("Aggiunto movimento sinusoidale. Break")
                         break 
                     elif(element["type"] == "complex"):
                         id_father = element["id"]
+                        print("Chiamata ricorsiva su complex")
+                        items.pop(index_list) #tolgo il riferimento padre
                         sub_movements = recursive_save(data,items,root=id_father)
                         data["values"].append(sub_movements)
                         i = i+1  
+                        print("Break di ricorsione")
                         break
-                else:
-                    n = n+1
-            items.pop(n)
-            #ricordarsi di fare pop ricorsivo id
+                #else:
+                #    print("Ramo else e incremento n")
+                #    n = n+1
+            #print("Elementi in items:" + str(items))
+            if items:
+                print("Faccio il pop dell'elemento  " + str(index_list))
+                items.pop(index_list)
+            print("------------fine while-------------------")
         return data
 
     recursive_save(data,items,'')
