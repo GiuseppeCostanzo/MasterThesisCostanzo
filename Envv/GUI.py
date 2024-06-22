@@ -452,58 +452,50 @@ def on_save_complex(itemsInput):
         "values": []
     }
 
-    def recursive_save(data,items,root):
-        i = 0 #index/level of the movements
-        while items :
-            #n = 0
-            index_list = 0
+    def recursive_save(data, items, root):
+        level = 0 
+        flag = True
+        remove = False
+        while items and flag==True:
             for element in items:
-                index_list = next((ii for ii, d in enumerate(items) if d.get("index") == i), None)
-                print("Elementi in items:" + str(items))
-                print("Valore di i da cercare: " + str(i))
-                print("Posizione nella lista dell'elemento: " + str(index_list))
-                if(element["index"]==i and element["root"] == root):
-                    if(element["type"] == "linear"):
-                        new_values = element["values"]
-                        data_l = {
+                if element["index"] == level and element["root"] == root:
+                    if element["type"] == "linear":
+                        data["values"].append({
                             "type": "linear",
-                            "values": new_values 
-                        }
-                        data["values"].append(data_l)
-                        i = i+1 
-                        print("Aggiunto movimento lineare. Break")
-                        break 
-                    elif(element["type"] == "sinusoidal"):
-                        new_values = element["values"]
-                        data_s = {
-                            "type": "sinusoidal",
-                            "values": new_values 
-                        }
-                        data["values"].append(data_s)
-                        i = i+1  
-                        print("Aggiunto movimento sinusoidale. Break")
-                        break 
-                    elif(element["type"] == "complex"):
-                        id_father = element["id"]
-                        print("Chiamata ricorsiva su complex")
-                        items.pop(index_list) #tolgo il riferimento padre
-                        sub_movements = recursive_save(data,items,root=id_father)
-                        data["values"].append(sub_movements)
-                        i = i+1  
-                        print("Break di ricorsione")
+                            "values": element["values"]
+                        })
+                        level += 1
+                        remove = True 
                         break
-                #else:
-                #    print("Ramo else e incremento n")
-                #    n = n+1
-            #print("Elementi in items:" + str(items))
-            if items:
-                print("Faccio il pop dell'elemento  " + str(index_list))
-                items.pop(index_list)
-            print("------------fine while-------------------")
+                    elif element["type"] == "sinusoidal":
+                        data["values"].append({
+                            "type": "sinusoidal",
+                            "values": element["values"]
+                        })
+                        level += 1
+                        remove = True
+                        break
+                    elif element["type"] == "complex":
+                        id_father = element["id"]
+                        remove = True 
+                        sub_movements = {"type": "complex", "values": []}
+                        res = recursive_save(sub_movements, items, root=id_father)
+                        data["values"].append(res)
+                        level += 1
+                        break
+            else: 
+                # This else is done only if all the elements of the for have been seen 
+                # (that is, no breaks were encountered in the for loop, and thus no matches with the elements)
+                flag = False 
+                #safe delete
+                if(remove==True): 
+                    items.remove(element)
+                    remove = False
         return data
 
-    recursive_save(data,items,'')
-    save_movement(data)
+    ris = recursive_save(data, items, '')
+    print("aaaaaaaaa")
+    save_movement(ris)
     return True
 
 
