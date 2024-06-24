@@ -7,11 +7,9 @@ import serial
 import json
 import os
 import time
-import functools
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
-import copy
 
 # Other files (must be in the same folder of GUI.py)
 from Discretizer import LinearMovement 
@@ -232,7 +230,8 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
     save_movement(data)
      
         
-# Prepare the data for discretization, and then call the corresponding discretize **************************
+# Prepare the data for discretization, and then call the corresponding discretize
+# Parameter in input "item" is the selected item (dict)
 def pre_discretize(item):
     if item is None:
         return None
@@ -1409,8 +1408,9 @@ class GUI(tk.Tk):
                     '''print("id: " + str(selected_item_tree_view["id"]) + 
                           " index: " + str(selected_item_tree_view["index"]) + 
                           " root: " + str(selected_item_tree_view["root"]))'''
-                    print(selected_item_tree_view)
-                    print("------------------")
+                    #print(selected_item_tree_view)
+                    #print("------------------")
+                    #print(elements_in_tree_view)
                     return
               
         #delete an item from treeview 

@@ -60,11 +60,11 @@ class SinusoidalMovement(Movement):
         self.y_init = y_init
         
     def discretize(self):
-        for i in range(6):
+        #for i in range(6):
             # Controlla se i valori massimo e minimo della sinusoide rimangono entro i limiti di 0 e 100
-            if self.y_init[i] + self.amplitude[i] > 100 or self.y_init[i] - self.amplitude[i] < 0:
-                print("I valori della sinusoide eccederebbero i limiti di 0 e 100.")
-                return None, None
+            #if self.y_init[i] + self.amplitude[i] > 100 or self.y_init[i] - self.amplitude[i] < 0:
+            #    print("I valori della sinusoide eccederebbero i limiti di 0 e 100.")
+            #    return None, None
         
         # Converte gli istanti di tempo da millisecondi a secondi per il calcolo
         self.startTime = self.startTime / 1000
