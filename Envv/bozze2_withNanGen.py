@@ -67,27 +67,14 @@ def pre_discretize_base(item):
     
 # elements_in_tree_view
 elements_in_tree_view = [
- {'id': 'I002', 'values': [['80', '10', '20', '30', '100', '20', '0'], ['10', '20', '30', '40', '50', '100', '1000'], '50'], 'type': 'linear', 'index': 0, 'root': 'I001'},
- {'id': 'I003', 'values': ['1200', '2000', ['60', '20', '0', '50'], ['70', '20', '0', '50'], ['80', '20', '0', '50'], ['90', '20', '0', '50'], ['100', '20', '0', '50'], ['110', '20', '0', '50'], '50'], 'type': 'sinusoidal', 'index': 1, 'root': 'I001'},
- {'id': 'I004', 'type': 'complex', 'index': 2, 'root': 'I001'},
- {'id': 'I005', 'values': ['400', '1200', ['10', '10', '0', '50'], ['20', '10', '0', '50'], ['30', '10', '0', '50'], ['40', '10', '0', '50'], ['50', '10', '0', '50'], ['60', '10', '0', '50'], '50'], 'type': 'sinusoidal', 'index': 0, 'root': 'I004'},
- {'id': 'I006', 'values': [['20', '40', '100', '50', '0', '25', '0'], ['88', '60', '0', '10', '100', '5', '3000'], '50'], 'type': 'linear', 'index': 1, 'root': 'I004'},
- {'id': 'I007', 'values': [['10', '20', '30', '40', '50', '40', '400'], ['50', '60', '70', '80', '90', '60', '500'], '50'], 'type': 'linear', 'index': 2, 'root': 'I004'}
+ #{'id': 'I002', 'values': [['80', '10', '20', '30', '100', '20', '0'], ['10', '20', '30', '40', '50', '100', '1000'], '50'], 'type': 'linear', 'index': 0, 'root': 'I001'},
+ #{'id': 'I003', 'values': ['1200', '2000', ['60', '20', '0', '50'], ['70', '20', '0', '50'], ['80', '20', '0', '50'], ['90', '20', '0', '50'], ['100', '20', '0', '50'], ['110', '20', '0', '50'], '50'], 'type': 'sinusoidal', 'index': 1, 'root': 'I001'},
+ #{'id': 'I004', 'type': 'complex', 'index': 2, 'root': 'I001'},
+ {'id': 'I005', 'values': ['0', '1000', ['10', '10', '0', '50'], ['20', '10', '0', '50'], ['30', '10', '0', '50'], ['40', '10', '0', '50'], ['50', '10', '0', '50'], ['5', '2000', '0', '50'], '50'], 'type': 'sinusoidal', 'index': 0, 'root': 'I004'},
+ {'id': 'I006', 'values': [['20', '40', '100', '50', '0', '40', '500'], ['88', '60', '0', '10', '100', '90', '1500'], '50'], 'type': 'linear', 'index': 1, 'root': 'I004'},
+ {'id': 'I007', 'values': [['10', '20', '30', '40', '50', '60', '800'], ['50', '60', '70', '80', '90', '80', '1000'], '50'], 'type': 'linear', 'index': 2, 'root': 'I004'}
 ]
 
-
-
-
-# Funzione per trovare il valore valido precedente
-'''def trova_valore_valido(elements_in_tree_view, t):
-    for element in reversed(elements_in_tree_view):
-        movimento = pre_discretize_base(element)
-        if movimento is None:
-            continue
-        for val in movimento:
-            if val[0] == t:
-                return val[1]
-    return np.nan'''
 
 # ----------Campionamento e combinazione degli elementi inelements_in_tree_view----------
 
@@ -102,26 +89,30 @@ output = []
 # Generazione dell'array di tempi
 t_totale = np.arange(t_start, t_end + deltaT, deltaT)
 
-#DEVO CAMPIONARE CON IL DELTA T PIù PICCOLO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+#*************DEVO CAMPIONARE CON IL DELTA T PIù PICCOLO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #----> al momento nei valori di prova ci sono deltaT tutti uguali a 50
-for funzione in elements_in_tree_view:
+for i, funzione in enumerate(elements_in_tree_view):
     movimento = pre_discretize_base(funzione)
     if movimento is None:
         continue
+
+    t_next_start = t_end
+    if i + 1 < len(elements_in_tree_view):
+        # Determina il tempo di inizio della funzione successiva.
+        t_next_start = int(elements_in_tree_view[i + 1]["values"][0][6] if elements_in_tree_view[i + 1]["type"] == "linear" else elements_in_tree_view[i + 1]["values"][0])
+    
     for row in movimento:
-        t = row[-1]  # l'ultimo elemento di ogni riga è l'istante temporale
-        servomotori = row[:6]  # i primi 5 elementi sono i valori dei servomotori
+        t = row[-1]
+        if t >= t_next_start:
+            break  # Interrompe il campionamento della funzione corrente e passa alla successiva
+                    # quando si raggiunge il tempo di inizio della funzione successiva.
+        servomotori = row[:6]
         
         idx = int((t - t_start) // deltaT)
         if idx >= len(t_totale):
             continue
-        
-        if np.any(np.isnan(servomotori)):
-            #valori_validi = trova_valore_valido(elements_in_tree_view[:elements_in_tree_view.index(funzione)], t)
-            #servomotori = np.where(np.isnan(servomotori), valori_validi, servomotori)
-            print("da gestire")
-            exit
-        
+
         # Aggiungi i valori e il tempo alla lista output
         output.append(np.append(servomotori, t))
 
