@@ -15,7 +15,7 @@ from tkinter import filedialog
 from Discretizer import LinearMovement 
 from Discretizer import SinusoidalMovement
 from Discretizer import ComplexMovement
-from Utility import Table
+from Utility import Toolbox
 
 # Global parameters, eventually to be set
 usbport = 'COM7' # Usb port where arduino is connected 
@@ -26,54 +26,6 @@ baud = 38400 # Baud - speed parameter for arduino comm. (MUST BE the same value 
 start_time = None # used to calculate the time start of the button
 tree_view = [] #for visualizing the imported json in complex movement frame3
 
-# This 2 functions maps an input value (in range 0-100) to the corresponding value on the servo, accordingly to the 
-# configuration on the json file
-
-
-# GENERAL MAPPING
-def mapping(thumb_big_value, thumb_little_value, index_finger_value, middle_finger_value, ringPinky_value, forearm_value):
-    with open("config.json", "r") as json_file:
-    #Load the contents of the JSON file into a Python dictionary
-        data = json.load(json_file)
-    
-    #thumb - big servo
-    thumb_big = data["thumb_big"]
-    
-    #thumb - little servo
-    thumb_little = data["thumb_little"]
-    
-    #index_finger servo
-    index_finger = data["index_finger"]
-
-    #middle_finger servo
-    middle_finger = data["middle_finger"]
- 
-    #ring_finger servo
-    ring_pinky = data["ring_pinky"]
-  
-    #forearm servo
-    forearm = data["forearm"]
-
-    #All inputs
-    input_values = [thumb_big_value, thumb_little_value, index_finger_value, middle_finger_value, ringPinky_value, forearm_value]
-    #All range
-    fingers_data = [thumb_big, thumb_little, index_finger, middle_finger, ring_pinky,forearm]
-    fingers_data_mapped = []
-    i = 0
-    for single_finger in fingers_data:
-        start = single_finger["range_from"]
-        stop = single_finger["range_to"]
-        fingers_data_mapped.append(calculus(input_values[i],start,stop))
-        i = i+1
-        
-    return fingers_data_mapped
-        
-def calculus(val,start,stop):
-    if start==0:
-        return int((val/100)*stop)
-    else:
-        new_stop = stop - start
-        return int(((val/100)*new_stop)+start)  
 
 
 # FUNZIONE PER SALVARE UN MOVIMENTO
@@ -179,7 +131,7 @@ def on_submit(gui_instance):
         return
     # Comunicazione ad arduino dei valori
     # Mapping: thumb big - thumb little - index - middle - ring&pinky - forearm
-    fingers_data_mapped = mapping(packet[0],packet[1],packet[2],packet[3],packet[4],packet[5])
+    fingers_data_mapped = Toolbox.mapping(packet[0],packet[1],packet[2],packet[3],packet[4],packet[5])
     # Send values to arduino
     global arduino
     arduino.write(bytearray(fingers_data_mapped))
@@ -311,7 +263,7 @@ def execute_movement(item):
             if(val < (time.time() - start_time)):
                 continue
         
-        fingers_data_mapped = mapping(movement[packet][0],movement[packet][1],movement[packet][2],movement[packet][3],movement[packet][4],movement[packet][5])
+        fingers_data_mapped = Toolbox.mapping(movement[packet][0],movement[packet][1],movement[packet][2],movement[packet][3],movement[packet][4],movement[packet][5])
         
         global arduino
         arduino.write(bytearray(fingers_data_mapped))       
@@ -332,59 +284,15 @@ def visualize_movement(gui_instance,item):
     
     # Table (in input_window)
     headers = ["Thumb(B)", "Thumb(L)","Index","Middle","Ring/Pinky","Forearm","Time instant (ms)"]
-    table = Table(input_window, headers, movement)
+    table = Toolbox.create_table(input_window, headers, movement)
     table.pack(expand=True, fill="both")
     
     # Frame 2 (contiene checkbox+plot)
     frame2 = tk.Frame(input_window)
     frame2.pack(side="top", expand=True, fill="both", padx=1, pady=1)
     frame2.pack_propagate(True) 
-    create_plot(frame2,movement)
+    Toolbox.create_plot(frame2,movement)
     
-# Creazione del plot
-def create_plot(master, movement):
-    figure = Figure(figsize=(50, 50), dpi=75)
-    #plot = figure.add_subplot(111)
-    plot = figure.add_axes([0.08, 0.13, 0.85, 0.85])
-
-    headers_y = ["Thumb(B)", "Thumb(L)", "Index", "Middle", "Ring/Pinky", "Forearm"]
-    temp_inst = [row[-1] for row in movement]
-    servo_values = [row[:-1] for row in movement]
-
-    lines = [] 
-    for i in range(6):
-        valori_y = [val[i] for val in servo_values]
-        line, = plot.plot(temp_inst, valori_y, label=headers_y[i])
-        lines.append(line)
-
-    plot.set_xlabel('Time instant (ms)')
-    plot.set_ylabel('Values')
-
-    # Function to update plot based on checkbox selection
-    def update_plot():
-        for i, line in enumerate(lines):
-            if checkboxes_state[i].get():
-                line.set_visible(True)
-            else:
-                line.set_visible(False)
-        figure.canvas.draw()
-    
-    frame3 = tk.Frame(master)
-    frame3.pack(side="left", expand=False, fill="y")
-    
-    # Create checkboxes
-    checkboxes_state = []  # To store the checkbox states
-    for i in range(6):
-        var = tk.BooleanVar(value=True)  # True by default, you can set to False if needed
-        checkboxes_state.append(var)
-        checkbox = tk.Checkbutton(frame3, text=headers_y[i], variable=var, command=update_plot)
-        checkbox.grid(row=i, column=0, sticky="w") 
-
-    plot.legend(fontsize='small')
-    plot.grid(True)
-
-    canvas = FigureCanvasTkAgg(figure, master)
-    canvas.get_tk_widget().pack(expand=True, fill="both")
     
 # import json
 def import_json():
@@ -493,7 +401,6 @@ def on_save_complex(itemsInput):
         return data
 
     ris = recursive_save(data, items, '')
-    print("aaaaaaaaa")
     save_movement(ris)
     return True
 
