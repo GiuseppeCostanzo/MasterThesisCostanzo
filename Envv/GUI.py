@@ -235,7 +235,18 @@ def pre_discretize(item):
         
         sinMov = SinusoidalMovement(start_time,end_time,amplitude,frequency,phase,start_value_y,deltaT)
         movement = (sinMov.discretize()).tolist()
-        return movement    
+
+        # Check if e > 100 (escludendo l'ultima colonna)
+        exists_cut_values = any((val > 100 or val < 0) for row in movement for val in row[:-1])
+
+        if exists_cut_values:
+            for subrow in movement:
+                for i in range(len(subrow) - 1):  # - 1 for exclude the last column
+                    if subrow[i] > 100:
+                        subrow[i] = 100
+                    elif subrow[i] < 0:
+                        subrow[i] = 0
+        return movement, exists_cut_values
         
 # funzione per eseguire un movimento base salvato **************************************************************
 def execute_movement(item):
@@ -271,7 +282,7 @@ def execute_movement(item):
           
 #funzione per visualizzare un movimento in frame3*************************************************************
 def visualize_movement(gui_instance,item):
-    movement = pre_discretize(item)
+    movement, flag = pre_discretize(item)
     if movement is None:
         messagebox.showerror("Error", "Select or import a movement")
         return 
@@ -293,6 +304,9 @@ def visualize_movement(gui_instance,item):
     frame2.pack_propagate(True) 
     Toolbox.create_plot(frame2,movement)
     
+    if flag is True:
+        messagebox.showinfo("Info", "There are values ​​that exceed the range 0-100. A cut has been made")
+
     
 # import json
 def import_json():
