@@ -12,6 +12,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
 
 # Other files (must be in the same folder of GUI.py)
+from Discretizer import PreDiscr
 from Discretizer import LinearMovement 
 from Discretizer import SinusoidalMovement
 from Discretizer import ComplexMovement
@@ -186,87 +187,15 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
     save_movement(data)
      
         
-# Prepare the data for discretization, and then call the corresponding discretize
-# Parameter in input "item" is the selected item (dict)
-def pre_discretize(item):
-    if item is None:
-        return None
+# Call the discretize in Discretizer.py
+def discretize(item):
+    return PreDiscr.pre_discretize(item)
 
-    if len(item) == 0:  # Se la lunghezza del dizionario è 0, è vuoto oppure è None
-        return None
-    
-    if item["type"] == "linear":
-        values = item["values"] #values(movement) of the item 
-        
-        start_time = int(values[0][6])
-        end_time = int(values[1][6])
-
-        start_pos = []
-        for i in range(0,len(values[0])-1):
-            start_pos.append(int(values[0][i]))
-
-        end_pos = []
-        for i in range(0,len(values[1])-1):
-            end_pos.append(int(values[1][i]))
-
-        deltaT = int(values[2]) 
-        linMov = LinearMovement(start_time,end_time,start_pos,end_pos,deltaT)
-        #movement to visualize/execute
-        movement = (linMov.discretize()).tolist()
-        
-        # Check if e > 100 (escludendo l'ultima colonna)
-        exists_cut_values = any((val > 100 or val < 0) for row in movement for val in row[:-1])
-
-        if exists_cut_values:
-            for subrow in movement:
-                for i in range(len(subrow) - 1):  # - 1 for exclude the last column
-                    if subrow[i] > 100:
-                        subrow[i] = 100
-                    elif subrow[i] < 0:
-                        subrow[i] = 0
-        return movement, exists_cut_values
-        
-    if item["type"] == "sinusoidal":
-        values = item["values"] #values(movement) of the item   
-        start_time = int(values[0])
-        end_time = int(values[1])
-        deltaT = int(values [8])
-        
-        amplitude = []
-        for i in range(2,8):
-            amplitude.append(int(values[i][0]))
-            
-        frequency = []
-        for i in range(2,8):
-            frequency.append(int(values[i][1]))
-        
-        phase = []
-        for i in range(2,8):
-            phase.append(int(values[i][2]))
-        
-        start_value_y = []
-        for i in range(2,8):
-            start_value_y.append(int(values[i][3]))
-        
-        sinMov = SinusoidalMovement(start_time,end_time,amplitude,frequency,phase,start_value_y,deltaT)
-        movement = (sinMov.discretize()).tolist()
-
-        # Check if e > 100 (escludendo l'ultima colonna)
-        exists_cut_values = any((val > 100 or val < 0) for row in movement for val in row[:-1])
-
-        if exists_cut_values:
-            for subrow in movement:
-                for i in range(len(subrow) - 1):  # - 1 for exclude the last column
-                    if subrow[i] > 100:
-                        subrow[i] = 100
-                    elif subrow[i] < 0:
-                        subrow[i] = 0
-        return movement, exists_cut_values
         
 # funzione per eseguire un movimento base salvato **************************************************************
 def execute_movement(item):
     print(item)
-    movement, flag = pre_discretize(item)
+    movement, flag = discretize(item)
     if movement is None:
         messagebox.showerror("Error", "Select or import a movement")
         return 
@@ -300,7 +229,7 @@ def execute_movement(item):
           
 #funzione per visualizzare un movimento in frame3*************************************************************
 def visualize_movement(gui_instance,item):
-    movement, flag = pre_discretize(item)
+    movement, flag = discretize(item)
     if movement is None:
         messagebox.showerror("Error", "Select or import a movement")
         return 

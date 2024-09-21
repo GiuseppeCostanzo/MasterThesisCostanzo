@@ -2,6 +2,89 @@ import numpy as np
 from abc import ABC, abstractmethod
 from Utility import Toolbox
 
+
+class PreDiscr():
+
+    # Prepare the data for discretization, and then call the corresponding discretize
+    # Parameter in input "item" is the selected item (dict)
+    def pre_discretize(item):
+        if item is None:
+            return None
+
+        if len(item) == 0:  # Se la lunghezza del dizionario è 0, è vuoto oppure è None
+            return None
+        
+        if item["type"] == "linear":
+            values = item["values"] #values(movement) of the item 
+            
+            start_time = int(values[0][6])
+            end_time = int(values[1][6])
+
+            start_pos = []
+            for i in range(0,len(values[0])-1):
+                start_pos.append(int(values[0][i]))
+
+            end_pos = []
+            for i in range(0,len(values[1])-1):
+                end_pos.append(int(values[1][i]))
+
+            deltaT = int(values[2]) 
+            linMov = LinearMovement(start_time,end_time,start_pos,end_pos,deltaT)
+            #movement to visualize/execute
+            movement = (linMov.discretize()).tolist()
+            
+            # Check if e > 100 (escludendo l'ultima colonna)
+            exists_cut_values = any((val > 100 or val < 0) for row in movement for val in row[:-1])
+
+            if exists_cut_values:
+                for subrow in movement:
+                    for i in range(len(subrow) - 1):  # - 1 for exclude the last column
+                        if subrow[i] > 100:
+                            subrow[i] = 100
+                        elif subrow[i] < 0:
+                            subrow[i] = 0
+            return movement, exists_cut_values
+            
+        if item["type"] == "sinusoidal":
+            values = item["values"] #values(movement) of the item   
+            start_time = int(values[0])
+            end_time = int(values[1])
+            deltaT = int(values [8])
+            
+            amplitude = []
+            for i in range(2,8):
+                amplitude.append(int(values[i][0]))
+                
+            frequency = []
+            for i in range(2,8):
+                frequency.append(int(values[i][1]))
+            
+            phase = []
+            for i in range(2,8):
+                phase.append(int(values[i][2]))
+            
+            start_value_y = []
+            for i in range(2,8):
+                start_value_y.append(int(values[i][3]))
+            
+            sinMov = SinusoidalMovement(start_time,end_time,amplitude,frequency,phase,start_value_y,deltaT)
+            movement = (sinMov.discretize()).tolist()
+
+            # Check if e > 100 (escludendo l'ultima colonna)
+            exists_cut_values = any((val > 100 or val < 0) for row in movement for val in row[:-1])
+
+            if exists_cut_values:
+                for subrow in movement:
+                    for i in range(len(subrow) - 1):  # - 1 for exclude the last column
+                        if subrow[i] > 100:
+                            subrow[i] = 100
+                        elif subrow[i] < 0:
+                            subrow[i] = 0
+            return movement, exists_cut_values
+
+
+
+
 # Abstract father class
 class Movement(ABC):
     def __init__(self, startTime, endTime):
@@ -38,10 +121,8 @@ class LinearMovement(Movement):
         # Il for è al contrario, va dall'ultimo elemento al primo per mantenere l'ordine stabilito del sistema
         for i in range(4,-1,-1):
             nuove_posizioni = (np.linspace(self.fromPos[i], self.toPos[i], L)).astype(np.int64)
-
             # Impila gli array
             matrice_discretizzata = np.vstack((nuove_posizioni,matrice_discretizzata))
-        
         return matrice_discretizzata.T
 
 class SinusoidalMovement(Movement):
@@ -61,12 +142,6 @@ class SinusoidalMovement(Movement):
         self.y_init = y_init
         
     def discretize(self):
-        #for i in range(6):
-            # Controlla se i valori massimo e minimo della sinusoide rimangono entro i limiti di 0 e 100
-            #if self.y_init[i] + self.amplitude[i] > 100 or self.y_init[i] - self.amplitude[i] < 0:
-            #    print("I valori della sinusoide eccederebbero i limiti di 0 e 100.")
-            #    return None, None
-        
         # Converte gli istanti di tempo da millisecondi a secondi per il calcolo
         self.startTime = self.startTime / 1000
         self.endTime = self.endTime / 1000
@@ -89,9 +164,21 @@ class SinusoidalMovement(Movement):
         return matrix.T 
     
 class ComplexMovement(Movement):
-        def __init__(self, startTime, endTime):
+        def __init__(self, startTime, endTime, all_movements):
             super().__init__(startTime, endTime)
-
+            self.all_movements = all_movements
 
         def discretize(self):
-            print("discretize complesso")
+            # SAMPLING
+            r = Toolbox.sort_and_structure(self.all_movements)
+            # Sort the dictionary w.r.t to index(level) 
+            # Delete the "head" of a complex movements (does not contain values)
+            result_without_head_complex = [diz for diz in r if diz.get("type") != "complex"]
+
+            # Discretize all the submovements
+            result_discr = []
+            for mov in result_without_head_complex:
+                result_discr.append(PreDiscr.pre_discretize(mov)) #deltaT più piccolo
+
+            
+            
