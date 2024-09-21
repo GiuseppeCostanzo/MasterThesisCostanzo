@@ -9,8 +9,8 @@ from Utility import Toolbox
 
 # Parametri da preparare prima di chiamare il discretize
 deltaT = 50  # intervallo di campionamento in millisecondi
-t_end = 6000  # time end
-t_start = 0  # time start
+t_end = 6000  # time end (il time più grande di tutti i time end dei movimenti mattoncino)
+t_start = 0  # time start (il time più piccolo di tutti i time end dei movimenti mattoncino)
 
 # single_movement di pre-discretizzazione come fornita
 def pre_discretize_base(item):
@@ -90,7 +90,8 @@ r = Toolbox.sort_and_structure(elements_in_tree_view)
 
 # Delete the "head" of a complex movements (does not contain values)
 result_without_head_complex = [diz for diz in r if diz.get("type") != "complex"]
-#print(result)
+print(result_without_head_complex)
+
 # Discretize all the submovements
 result_discr = []
 for mov in result_without_head_complex:
@@ -110,7 +111,7 @@ t_totale = np.arange(t_start, t_end + deltaT, deltaT)
 output = []
 
 
-def recursive_nan_reading(positions, row, index, result_discr):
+'''def recursive_nan_reading(positions, row, index, result_discr):
     end = False
     if(index == 0):
         end = True
@@ -132,16 +133,11 @@ def recursive_nan_reading(positions, row, index, result_discr):
         
         return recursive_nan_reading(new_positions, row, index-1, result_discr)  
     else:
-        return new_values
-
-
-
-
-
+        return new_values'''
 
 
 #result_discr list di list
-for i, single_movement in enumerate(result_discr):
+'''for i, single_movement in enumerate(result_discr):
 
     t_next_start = t_end
     if i + 1 < len(result_discr):
@@ -166,7 +162,7 @@ for i, single_movement in enumerate(result_discr):
         #print(result_discr[i])
         #print("-----------------------------------")
         # Aggiunta valori + istante di tempo tempo alla lista output (costruzione del campionamento)
-        output.append(np.append(servomotors_values, current_istant))
+        output.append(np.append(servomotors_values, current_istant))'''
 
     
 # Creazione della finestra Tkinter

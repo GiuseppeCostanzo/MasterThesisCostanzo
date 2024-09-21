@@ -140,18 +140,16 @@ def on_submit(gui_instance):
 # Funzione per il salvataggio dei movimenti lineari in frame2
 def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
        
-    #il .get() si usa qui perchè sono delle entry che vengono passate. Se venisse usato a monte nella gui, i campi
+    # Il .get() si usa qui perchè sono delle entry che vengono passate. Se venisse usato a monte nella gui, i campi
     # sarebbero vuoti perchè non viene atteso il click del pulsante
     # Controlli (il controllo che siano numeri in un certo range viene fatto direttamente sui campi con altre funzioni)
-    for item in init_list:
-        if item.get() == '' or item.get() is None:
-            messagebox.showerror("Error", "Fill all init fields")
-            return
-            
-    for item in end_list:
-        if item.get() == '' or item.get() is None:
-            messagebox.showerror("Error", "Fill all end fields ")
-            return
+    for i in range(len(init_list)):
+        if init_list[i].get() == '' and  end_list[i].get() != '':
+            messagebox.showerror("Error", "Fill in all or none of the fields for a servo motor")
+            return      
+        if init_list[i].get() != '' and  end_list[i].get() == '':  
+            messagebox.showerror("Error", "Fill in all or none of the fields for a servo motor")
+            return  
     
     # Controlli su istante iniziale e finale 
     if time_init.get() == '' or time_init.get() is None:
@@ -167,11 +165,17 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
     init_list_unpacked = []
     end_list_unpacked = []
     for item in init_list:
-        init_list_unpacked.append(item.get())
+        if item.get() == '':
+            init_list_unpacked.append("50")
+        else:  
+            init_list_unpacked.append(item.get())
     init_list_unpacked.append(time_init.get())
             
     for item in end_list:
-        end_list_unpacked.append(item.get())
+        if item.get() == '':
+            end_list_unpacked.append("50")
+        else:  
+            end_list_unpacked.append(item.get())
     end_list_unpacked.append(time_end.get())
         
     #salvataggio nel json
@@ -209,7 +213,18 @@ def pre_discretize(item):
         linMov = LinearMovement(start_time,end_time,start_pos,end_pos,deltaT)
         #movement to visualize/execute
         movement = (linMov.discretize()).tolist()
-        return movement
+        
+        # Check if e > 100 (escludendo l'ultima colonna)
+        exists_cut_values = any((val > 100 or val < 0) for row in movement for val in row[:-1])
+
+        if exists_cut_values:
+            for subrow in movement:
+                for i in range(len(subrow) - 1):  # - 1 for exclude the last column
+                    if subrow[i] > 100:
+                        subrow[i] = 100
+                    elif subrow[i] < 0:
+                        subrow[i] = 0
+        return movement, exists_cut_values
         
     if item["type"] == "sinusoidal":
         values = item["values"] #values(movement) of the item   
@@ -251,11 +266,14 @@ def pre_discretize(item):
 # funzione per eseguire un movimento base salvato **************************************************************
 def execute_movement(item):
     print(item)
-    movement = pre_discretize(item)
+    movement, flag = pre_discretize(item)
     if movement is None:
         messagebox.showerror("Error", "Select or import a movement")
         return 
     
+    if flag is True:
+        messagebox.showinfo("Info", "There are values ​​that exceed the range 0-100. A cut has been made")
+
     global start_time
     start_time = time.time()
     if open_serial_port() == False: #opening serial port
@@ -335,10 +353,16 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
     
     #check empty values
     for row in range(0, 6):
-        for column in range(1, 5):
-            if entries[(row, column)].get() == '' or entries[(row, column)].get() is None:
-                messagebox.showerror("Error", "Fill all fields")
-                return
+        if entries[(row, 1)].get() == '' and entries[(row, 2)].get() == '' and entries[(row, 3)].get() == '' and entries[(row, 4)].get() == '' :
+            continue
+        elif entries[(row, 1)].get() != '' and entries[(row, 2)].get() != '' and entries[(row, 3)].get() != '' and entries[(row, 4)].get() != '' :
+            continue
+        else:
+            messagebox.showerror("Error", "Fill all fields correctly. Fill in all or none of the fields for a servo motor")
+            return 
+
+            
+    
     if startTime.get() == '' or startTime.get() is None:
         messagebox.showerror("Error", "Fill start time field")
         return
@@ -348,12 +372,18 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
         return
     
      
-    #struttura di salvataggio : 6 liste -> thumbB, thumbL, index, middle, ring/pinky, forearm 
+    # Struttura di salvataggio : 6 liste -> thumbB, thumbL, index, middle, ring/pinky, forearm 
     # al cui interno hanno 4 valori ognuno -> startTime, endTime, amplitude, freq., phase, y inizio, deltaT
     values = [[],[],[],[],[],[]]
     for row in range(0, 6):
         for column in range(1, 5):
-            values[(row)].append(entries[(row, column)].get())
+            if entries[(row, column)].get() == '':
+                if column == 4:
+                    values[(row)].append("50") #y_init is 50 if the entry is empty
+                else:
+                    values[(row)].append("0") # startTime, endTime, amplitude, freq are 0 if the entry is emptys
+            else:
+                values[(row)].append(entries[(row, column)].get())
     data = {
         "type": "sinusoidal",
         "values": [startTime.get(),endTime.get(),values[0],values[1],values[2],values[3],values[4],values[5],deltaT.get()]
@@ -519,6 +549,26 @@ class GUI(tk.Tk):
 
     # ***************************** FRAME 2 - LINEAR MOVEMENT -CONFIGURATION *************************************************
     def configure_frame2(self):
+
+        # Funzione per mostrare il placeholder
+        def show_placeholder(entry, placeholder):
+            if entry.get() == '':
+                entry.insert(0, placeholder)
+                entry.config(fg='grey')
+
+        # Funzione per rimuovere il placeholder quando l'utente inizia a scrivere
+        def remove_placeholder(event, entry, placeholder):
+            if entry.get() == placeholder:
+                entry.delete(0, tk.END)
+                entry.config(fg='black')
+
+        # Funzione per reinserire il placeholder se l'entry è vuota
+        def check_placeholder(event, entry, placeholder):
+            if entry.get() == '':
+                show_placeholder(entry, placeholder)
+
+        placeholder_text = "Default=50(NaN)"
+
         for i in range(12):
             self.frame2.grid_rowconfigure(i, weight=0)
         
@@ -542,13 +592,14 @@ class GUI(tk.Tk):
         label1.grid(row=2,column=0,sticky='e')
         
         # entry - init position
-        thumb_big_init = tk.Entry(self.frame2, fg='black',validate="key", 
+        thumb_big_init = tk.Entry(self.frame2, fg='black',validate="key",
                              validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+
         thumb_big_init.configure(justify=tk.CENTER) 
         thumb_big_init.grid(row=2,column=1,padx=5)
         
         # entry - end position
-        thumb_big_end = tk.Entry(self.frame2, fg='black',validate="key", 
+        thumb_big_end = tk.Entry(self.frame2, fg='black',validate="key",
                              validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
         thumb_big_end.configure(justify=tk.CENTER) 
         thumb_big_end.grid(row=2,column=2)
@@ -684,6 +735,8 @@ class GUI(tk.Tk):
         button1 = tk.Button(self.frame2, text="Save", height=1, width=10, font= 2,
                             command=lambda: on_save_linear(self,init_list,end_list,time_init,time_end,deltaT))
         button1.grid(row=11,column=0,pady=20,columnspan=4)
+
+        
         
         
     # *************************************** FRAME 3 CONFIGURATION - Create complex movement*******************************************
@@ -931,15 +984,14 @@ class GUI(tk.Tk):
                 # function for saving modified values
                 def save_l(init_list,end_list,time_init,time_end,deltaT):
 
-                    for item in init_list:
-                        if item.get() == '' or item.get() is None:
-                            messagebox.showerror("Error", "Fill all init fields")
-                            return
-                        
-                    for item in end_list:
-                        if item.get() == '' or item.get() is None:
-                            messagebox.showerror("Error", "Fill all end fields ")
-                            return
+                    #check values on the entries
+                    for i in range(len(init_list)):
+                        if init_list[i].get() == '' and  end_list[i].get() != '':
+                            messagebox.showerror("Error", "Fill in all or none of the fields for a servo motor")
+                            return      
+                        if init_list[i].get() != '' and  end_list[i].get() == '':  
+                            messagebox.showerror("Error", "Fill in all or none of the fields for a servo motor")
+                            return  
                 
                     # Controlli su istante iniziale e finale 
                     if time_init.get() == '' or time_init.get() is None:
@@ -956,11 +1008,17 @@ class GUI(tk.Tk):
                     init_list_unpacked = []
                     end_list_unpacked = []
                     for item in init_list:
-                        init_list_unpacked.append(item.get())
+                        if item.get() == '':
+                            init_list_unpacked.append("50")
+                        else:  
+                            init_list_unpacked.append(item.get())
                     init_list_unpacked.append(time_init.get())
                             
                     for item in end_list:
-                        end_list_unpacked.append(item.get())
+                        if item.get() == '':
+                            end_list_unpacked.append("50")
+                        else:  
+                            end_list_unpacked.append(item.get())
                     end_list_unpacked.append(time_end.get())
 
                     nonlocal elements_in_tree_view
@@ -1081,10 +1139,14 @@ class GUI(tk.Tk):
                     
                     #check empty values
                     for row in range(0, 6):
-                        for column in range(1, 5):
-                            if entries[(row, column)].get() == '' or entries[(row, column)].get() is None:
-                                messagebox.showerror("Error", "Fill all fields")
-                                return
+                        if entries[(row, 1)].get() == '' and entries[(row, 2)].get() == '' and entries[(row, 3)].get() == '' and entries[(row, 4)].get() == '' :
+                            continue
+                        elif entries[(row, 1)].get() != '' and entries[(row, 2)].get() != '' and entries[(row, 3)].get() != '' and entries[(row, 4)].get() != '' :
+                            continue
+                        else:
+                            messagebox.showerror("Error", "Fill in all or none of the fields for a servo motor")
+                            return  
+                    
                     if startTime.get() == '' or startTime.get() is None:
                         messagebox.showerror("Error", "Fill start time field")
                         return
@@ -1099,11 +1161,21 @@ class GUI(tk.Tk):
                     nonlocal elements_in_tree_view
                     nonlocal selected_item_tree_view
                     nonlocal new_window
+
                     for element in elements_in_tree_view:
                         if element["id"] == selected_item_tree_view["id"]:
                             for i in range(2, 8):
+                                print(element["values"][i])
+                                print("------")
                                 for j in range(0, 4):
-                                    element["values"][i][j] = entries[(i-2, j+1)].get()
+                                    if entries[(i-2, j+1)].get() == '':
+                                        if j == 3:
+                                            element["values"][i][j] = "50" #y_init is 50 if the entry is empty
+                                        else:
+                                            element["values"][i][j] = "0" # startTime, endTime, amplitude, freq are 0 if the entry is emptys
+                                    else:
+                                        element["values"][i][j] = entries[(i-2, j+1)].get()
+
                             element["values"][0] = startTime.get()
                             element["values"][1] = endTime.get()
                             element["values"][8] = deltaT.get()

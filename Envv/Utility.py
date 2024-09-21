@@ -77,7 +77,7 @@ class Toolbox(tk.Frame):
             
         return fingers_data_mapped
 
-    #Used in discretize complex movement
+    # Used in discretize complex movement
     def sort_and_structure(data):
         # Ordina la lista di dizionari in base all'indice
         sorted_data = sorted(data, key=lambda x: x['index'])
