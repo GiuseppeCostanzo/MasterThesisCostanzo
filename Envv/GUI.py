@@ -13,9 +13,6 @@ from tkinter import filedialog
 
 # Other files (must be in the same folder of GUI.py)
 from Discretizer import PreDiscr
-from Discretizer import LinearMovement 
-from Discretizer import SinusoidalMovement
-from Discretizer import ComplexMovement
 from Utility import Toolbox
 
 # Global parameters, eventually to be set
@@ -1284,7 +1281,8 @@ class GUI(tk.Tk):
                 recursive_reading(None, tree_view)
                 update_index() #updating indexes
             else:
-                return      
+                return     
+            #print(elements_in_tree_view) 
                 
                 
         
