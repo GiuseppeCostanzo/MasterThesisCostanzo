@@ -1195,6 +1195,35 @@ class GUI(tk.Tk):
         # function for scaling of a movement of 1.5x, 2x or 0.5x
         # value is a float
         def scale(value):
+            
+            def scale_complex(value,root):
+                for mov in elements_in_tree_view:
+                    print(mov["id"])
+                    if mov['root'] == root:
+
+                        if mov["type"] == "linear":
+                            print("trovato movimento lineare")
+                            #update the selected movement
+                            old_val_init = float(mov["values"][0][6])
+                            mov["values"][0][6] = int(old_val_init*value)
+
+                            old_val_end = float(mov["values"][1][6])
+                            mov["values"][1][6] = int(old_val_end*value)
+                     
+                        if mov["type"] == "sinusoidal":
+                            #update the selected movement
+                            print("trovato movimento sinusoidale")
+                            old_val_init = float(mov["values"][0])
+                            mov["values"][0] = int(old_val_init*value)
+
+                            old_val_end = float(mov["values"][1])
+                            mov["values"][1] = int(old_val_end*value)
+
+                        if mov["type"] == "complex":
+                            print("trovato movimento complesso")
+                            scale_complex(value,mov["id"])
+                            
+                           
             if selected_item_tree_view is None:
                 messagebox.showerror("Error", "Select a movement")
                 return
@@ -1216,7 +1245,7 @@ class GUI(tk.Tk):
                         mov = selected_item_tree_view.copy()
                 messagebox.showinfo("Info", "Updated movement")
                 return
-
+            
             if type == "sinusoidal":
                 #update the selected movement
                 old_val_init = float(selected_item_tree_view["values"][0])
@@ -1233,7 +1262,10 @@ class GUI(tk.Tk):
                 return
 
             if type == "complex":
-                print("complex da implementare")
+                scale_complex(value,selected_item_tree_view["id"])
+                print(elements_in_tree_view)
+                messagebox.showinfo("Info", "Updated complex movement")
+                return
 
         ## function for scaling of a movement of a specific value
         def scale_specific():
