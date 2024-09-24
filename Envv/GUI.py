@@ -101,6 +101,26 @@ def on_validate2(action, index, value_if_allowed, prior_value, text, validation_
     else:
         return True
     
+# Funzione per validare campo input amplitude shift 
+def validate_amp_shift(value):
+    # Permetti stringa vuota per la cancellazione
+    if value == "":
+        return True
+    try:
+        # Se l'input è solo "-", permettilo temporaneamente
+        if value == "-":
+            return True
+        # Converti il valore in float
+        num = float(value)
+        # Controlla se il numero è nel range [-1, 1]
+        if -1 <= num <= 1:
+            return True
+        else:
+            return False
+    except ValueError:
+        # Se non è un numero valido, blocca l'input
+        return False
+    
 #Funzione per valdiare campi che accettano float (es. scala specifico)
 def validate_float_input(text):
     if text.strip() == "":
@@ -977,6 +997,7 @@ class GUI(tk.Tk):
                     
                 #validation functions for entries (only digit)
                 validate_entries = new_window.register(on_validate2)
+                validate_amp = new_window.register(validate_amp_shift)
                 
                 title = tk.Label(new_window, text="Sinusoidal movement",font="8")
                 title.grid(row=0, column=0, pady=20, padx=2, columnspan=7)
@@ -1024,7 +1045,10 @@ class GUI(tk.Tk):
                         entry = tk.Entry(new_window, width=15, validate="key")
                         a = selected_item_tree_view["values"][i][j-1] #accesso
                         entry.insert(0,a)
-                        entry.config(validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                        if j==3:
+                            entry.config(validatecommand=(validate_amp, "%P"))
+                        else:
+                            entry.config(validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                         entry.grid(row=i, column=j, padx=10, pady=5)
                         # Salva l'entry nel dizionario con una chiave unica
                         entries[((i-2), j)] = entry
@@ -1419,6 +1443,8 @@ class GUI(tk.Tk):
             
         #validation functions for entries (only digit)
         validate_entries = self.frame4.register(on_validate2)
+
+        validate_amp = self.frame4.register(validate_amp_shift)
         
         title = tk.Label(self.frame4, text="Sinusoidal movement",font="8")
         title.grid(row=0, column=0, pady=20, padx=2, columnspan=7)
@@ -1462,8 +1488,12 @@ class GUI(tk.Tk):
         # Creazione della griglia 4x4=16 campi di input (a cui vi si accede come fosse una matrice)
         for i in range(2, 8):
             for j in range(1, 5):
-                entry = tk.Entry(self.frame4, width=15, validate="key",
-                                 validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
+                if j == 3:
+                    entry = tk.Entry(self.frame4, width=15, validate="key",
+                                 validatecommand=(validate_amp, '%P'))
+                else:
+                    entry = tk.Entry(self.frame4, width=15, validate="key",
+                                    validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 entry.grid(row=i, column=j, padx=10, pady=5)
                 # Salva l'entry nel dizionario con una chiave unica
                 entries[((i-2), j)] = entry
