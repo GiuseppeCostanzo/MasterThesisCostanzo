@@ -195,11 +195,18 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
         else:  
             end_list_unpacked.append(item.get())
     end_list_unpacked.append(time_end.get())
-        
+
+    dT = ""
+    if deltaT.get() == '':
+        dT = "70"
+    else:
+        dT = deltaT.get()
+    
+
     #salvataggio nel json
     data = {
         "type": "linear",
-        "values": [init_list_unpacked,end_list_unpacked,deltaT.get()]
+        "values": [init_list_unpacked,end_list_unpacked,dT]
     }
     save_movement(data)
      
@@ -308,7 +315,7 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
             return 
 
             
-    
+    #check other values (start and end time)
     if startTime.get() == '' or startTime.get() is None:
         messagebox.showerror("Error", "Fill start time field")
         return
@@ -317,6 +324,15 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
         messagebox.showerror("Error", "Fill end time field")
         return
     
+    if(int(startTime.get()) >= int(endTime.get())):
+        messagebox.showerror("Error", "Insert an initial time smaller than the final time")
+        return
+    
+    dT = ""
+    if deltaT.get() == '':
+        dT = "70"
+    else:
+        dT = deltaT.get()
      
     # Struttura di salvataggio : 6 liste -> thumbB, thumbL, index, middle, ring/pinky, forearm 
     # al cui interno hanno 4 valori ognuno -> startTime, endTime, amplitude, freq., phase, y inizio, deltaT
@@ -332,7 +348,7 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
                 values[(row)].append(entries[(row, column)].get())
     data = {
         "type": "sinusoidal",
-        "values": [startTime.get(),endTime.get(),values[0],values[1],values[2],values[3],values[4],values[5],deltaT.get()]
+        "values": [startTime.get(),endTime.get(),values[0],values[1],values[2],values[3],values[4],values[5],dT]
     } 
     save_movement(data) 
 
@@ -974,12 +990,19 @@ class GUI(tk.Tk):
                         if element["id"] == selected_item_tree_view["id"]:
                             element["values"][0] = init_list_unpacked
                             element["values"][1] = end_list_unpacked
-                            element["values"][2] = deltaT.get()
+                            dT = ""
+                            if deltaT.get() == '':
+                                dT = "70"
+                            else:
+                                dT = deltaT.get()
+                            element["values"][2] = dT
                             new_window.destroy()
                             return
                     print("ERROR, the selected item does not exists")
                     new_window.destroy()
                     return
+                
+
                 # Button in new window for saving changes
                 button1 = tk.Button(new_window, text="Save", height=1, width=10, font= 2,command=lambda:save_l(init_list,end_list,time_init,time_end,deltaT))
                 button1.grid(row=11,column=0,pady=20,columnspan=4)
@@ -1105,6 +1128,10 @@ class GUI(tk.Tk):
                         messagebox.showerror("Error", "Fill end time field")
                         return
                     
+                    if(int(startTime.get()) >= int(endTime.get())):
+                        messagebox.showerror("Error", "Insert an initial time smaller than the final time")
+                        return
+                    
                     
                     # struttura di salvataggio : 6 liste -> thumbB, thumbL, index, middle, ring/pinky, forearm 
                     # al cui interno hanno 4 valori ognuno (amplitude, freq, phase, y_inizio) -> startTime, endTime, lista[i], deltaT
@@ -1115,8 +1142,8 @@ class GUI(tk.Tk):
                     for element in elements_in_tree_view:
                         if element["id"] == selected_item_tree_view["id"]:
                             for i in range(2, 8):
-                                print(element["values"][i])
-                                print("------")
+                                #print(element["values"][i])
+                                #print("------")
                                 for j in range(0, 4):
                                     if entries[(i-2, j+1)].get() == '':
                                         if j == 3:
@@ -1128,7 +1155,12 @@ class GUI(tk.Tk):
 
                             element["values"][0] = startTime.get()
                             element["values"][1] = endTime.get()
-                            element["values"][8] = deltaT.get()
+                            dT = ""
+                            if deltaT.get() == '':
+                                dT = "70"
+                            else:
+                                dT = deltaT.get()
+                            element["values"][8] = dT
                             new_window.destroy()
                             return
                     print("Error in save_s sinusoidal")
