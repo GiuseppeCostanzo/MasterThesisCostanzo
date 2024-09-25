@@ -12,7 +12,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
 
 # Other files (must be in the same folder of GUI.py)
-from Discretizer import PreDiscr
+from Discretizer import LinearMovement
+from Discretizer import SinusoidalMovement
+from Discretizer import ComplexMovement
 from Utility import Toolbox
 
 # Global parameters, eventually to be set
@@ -184,14 +186,14 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
     end_list_unpacked = []
     for item in init_list:
         if item.get() == '':
-            init_list_unpacked.append("50")
+            init_list_unpacked.append("NaN")
         else:  
             init_list_unpacked.append(item.get())
     init_list_unpacked.append(time_init.get())
             
     for item in end_list:
         if item.get() == '':
-            end_list_unpacked.append("50")
+            end_list_unpacked.append("NaN")
         else:  
             end_list_unpacked.append(item.get())
     end_list_unpacked.append(time_end.get())
@@ -212,15 +214,15 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
      
         
 # Call the discretize in Discretizer.py
-def discretize(item):
-    return PreDiscr.pre_discretize(item)
+#def discretize(item):
+#    return PreDiscr.pre_discretize(item)
 
         
 # funzione per eseguire un movimento base salvato **************************************************************
 def execute_movement(item):
-    print(item)
-    movement, flag = discretize(item)
-    if movement is None:
+    print("Modifica esegui il movimento (execute_movement)")
+    #movement, flag = discretize(item)
+    '''if movement is None:
         messagebox.showerror("Error", "Select or import a movement")
         return 
     
@@ -248,14 +250,18 @@ def execute_movement(item):
         fingers_data_mapped = Toolbox.mapping(movement[packet][0],movement[packet][1],movement[packet][2],movement[packet][3],movement[packet][4],movement[packet][5])
         
         global arduino
-        arduino.write(bytearray(fingers_data_mapped))       
+        arduino.write(bytearray(fingers_data_mapped)) '''      
         
           
 #funzione per visualizzare un movimento in frame3*************************************************************
 def visualize_movement(gui_instance,item):
-    movement, flag = discretize(item)
+
+    if item['type'] == 'linear':
+        d = LinearMovement(item=item)
+        movement, flag = d.discretize()
+
     if movement is None:
-        messagebox.showerror("Error", "Select or import a movement")
+        messagebox.showerror("Error", "Select or import a movement correctly")
         return 
     
     # Creazione della finestra di input
@@ -340,10 +346,7 @@ def on_save_sinusoidal(gui_instance,startTime,endTime,entries,deltaT):
     for row in range(0, 6):
         for column in range(1, 5):
             if entries[(row, column)].get() == '':
-                if column == 4:
-                    values[(row)].append("50") #y_init is 50 if the entry is empty
-                else:
-                    values[(row)].append("0") # startTime, endTime, amplitude, freq are 0 if the entry is emptys
+                values[(row)].append("NaN") # startTime, endTime, amplitude, freq, y_init are 0 if the entry is emptys
             else:
                 values[(row)].append(entries[(row, column)].get())
     data = {
@@ -971,14 +974,14 @@ class GUI(tk.Tk):
                     end_list_unpacked = []
                     for item in init_list:
                         if item.get() == '':
-                            init_list_unpacked.append("50")
+                            init_list_unpacked.append("NaN")
                         else:  
                             init_list_unpacked.append(item.get())
                     init_list_unpacked.append(time_init.get())
                             
                     for item in end_list:
                         if item.get() == '':
-                            end_list_unpacked.append("50")
+                            end_list_unpacked.append("NaN")
                         else:  
                             end_list_unpacked.append(item.get())
                     end_list_unpacked.append(time_end.get())
@@ -1146,10 +1149,7 @@ class GUI(tk.Tk):
                                 #print("------")
                                 for j in range(0, 4):
                                     if entries[(i-2, j+1)].get() == '':
-                                        if j == 3:
-                                            element["values"][i][j] = "50" #y_init is 50 if the entry is empty
-                                        else:
-                                            element["values"][i][j] = "0" # startTime, endTime, amplitude, freq are 0 if the entry is emptys
+                                        element["values"][i][j] = "NaN" # startTime, endTime, amplitude, freq, y_init are NaN if the entry is emptys
                                     else:
                                         element["values"][i][j] = entries[(i-2, j+1)].get()
 
