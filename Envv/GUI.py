@@ -1303,7 +1303,7 @@ class GUI(tk.Tk):
             print("flip")
             
             
-        #update the indexes (levels) of the elements in treeview (called on import json or click "up" or "down")
+        #update the indexes (levels) of the elements in treeview (called on import json or click "up" or "down", "delete_item" e "import_json")
         def update_index():
             nonlocal tree
             for item in elements_in_tree_view:
@@ -1420,22 +1420,39 @@ class GUI(tk.Tk):
                     #print("------------------")
                     #print(elements_in_tree_view)
                     return
-              
+
+        def delete_item_recursive(id_item):
+            nonlocal elements_in_tree_view
+
+            # Trova il dizionario con l'id specificato
+            dizionario = next((d for d in elements_in_tree_view if d['id'] == id_item), None)
+            
+            # Se il dizionario non esiste, non facciamo nulla
+            if not dizionario:
+                return
+            
+            # Se il dizionario è di tipo 'c', rimuoviamo anche i suoi figli
+            if dizionario['type'] == 'complex':
+                figli_da_rimuovere = [d['id'] for d in elements_in_tree_view if d.get('root') == id_item]
+                
+                # Rimozione ricorsiva per ogni figlio
+                for figlio_id in figli_da_rimuovere:
+                    delete_item_recursive(figlio_id)
+            
+            # Rimuoviamo il dizionario con l'id specificato
+            elements_in_tree_view[:] = [d for d in elements_in_tree_view if d['id'] != id_item]
+
+
         #delete an item from treeview 
-        def delete_item():
-            nonlocal id_item
+        def delete_item(id_item):
             if id_item is None:
                 messagebox.showerror("Error", "Select a movement to delete")
-                return
-
+                return         
             tree.delete(id_item) #delete the element from the treeview
-
-            nonlocal elements_in_tree_view
-            #elimino l'elemento anche da elements_in_tree_view ricorsivamente con i figli
-            elements_in_tree_view = [diz for diz in elements_in_tree_view if diz['id'] != id_item]
-            elements_in_tree_view = [diz for diz in elements_in_tree_view if diz['root'] != id_item]
-            id_item = None
+            delete_item_recursive(id_item)
             update_index()
+            print(elements_in_tree_view)
+            return
 
         
         #empty elements_in_tree_view(ram) and tree_view 
@@ -1477,7 +1494,7 @@ class GUI(tk.Tk):
                                      command=lambda: visualize_movement(self.frame3, selected_item_tree_view))
         button_visualize.grid(row=1,column=2)
         
-        button_delete = tk.Button(self.frame3, text="Delete", command=delete_item)
+        button_delete = tk.Button(self.frame3, text="Delete", command=lambda: delete_item(id_item))
         button_delete.grid(row=1,column=3)
 
         button_clear_all = tk.Button(self.frame3, text="Clear all",
