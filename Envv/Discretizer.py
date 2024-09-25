@@ -57,7 +57,7 @@ class PreDiscr():
                 start_time = int(values[0])
                 end_time = int(values[1])
                 if deltaT is None:
-                    deltaT = int(values [8])
+                    deltaT = int(values[8])
                 
                 amplitude = []
                 for i in range(2,8):
@@ -69,7 +69,7 @@ class PreDiscr():
                 
                 phase = []
                 for i in range(2,8):
-                    phase.append(int(values[i][2]))
+                    phase.append(float(values[i][2]))
                 
                 start_value_y = []
                 for i in range(2,8):
@@ -154,32 +154,68 @@ class Movement(ABC):
         pass
 
 # fromPos and toPos are two lists
+# item is the selected item in the gui (dict)
 class LinearMovement(Movement):
-    def __init__(self, startTime, endTime, fromPos, toPos, deltaT=70):
+    def __init__(self, startTime=None, endTime=None, deltaT=None, item=None):
         super().__init__(startTime, endTime)
-        self.fromPos = fromPos
-        self.toPos = toPos
+
+        if item is None:
+            raise TypeError("The 'item' parameter cannot be None")
+
+        self.item = item
+        self.values = item["values"] # values of the item (movement)
+
+        self.fromPos = [] #take all start pos
+        for i in range(0,len(self.values[0])-1):
+            self.fromPos.append(int(self.values[0][i]))
+
+        self.toPos = [] #take all end pos
+        for i in range(0,len(self.values[1])-1):
+            self.toPos.append(int(self.values[1][i]))
+
         self.deltaT = deltaT
-        
+
     def discretize(self):
+        # Some check
+        if all(var is None for var in [self.startTime, self.endTime, self.deltaT]):      
+            self.startTime = int(self.values[0][6]) #take the start time from the item
+            self.endTime = int(self.values[1][6])  #take the end time from the item    
+            self.deltaT = int(self.values[2]) #take the deltaT
+        elif all(var is not None for var in [self.startTime, self.endTime, self.deltaT]):
+            pass
+        else:
+            raise TypeError("All arguments must be null or all non-null")
+
+        # Discretize
         # Calcola il numero di intervalli discreti
         L = int(np.round((self.endTime - self.startTime) / self.deltaT)) + 1
 
         # Genera array di tempi discreti per il set corrente di parametri
-        tempi_discreti = (np.linspace(self.startTime, self.endTime, L)).astype(np.int64)
+        discrete_times = (np.linspace(self.startTime, self.endTime, L)).astype(np.int64)
 
         # Restituisce numeri equidistanti in un intervallo specificato L 
-        posizioni_discrete = (np.linspace(self.fromPos[5], self.toPos[5], L)).astype(np.int64)
-        
+        discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], L)).astype(np.int64)
+
         # Impila gli array
-        matrice_discretizzata = np.vstack((posizioni_discrete, tempi_discreti))
+        discretized_matrix = np.vstack((discrete_positions, discrete_times))
 
         # Il for è al contrario, va dall'ultimo elemento al primo per mantenere l'ordine stabilito del sistema
         for i in range(4,-1,-1):
-            nuove_posizioni = (np.linspace(self.fromPos[i], self.toPos[i], L)).astype(np.int64)
+            new_positions = (np.linspace(self.fromPos[i], self.toPos[i], L)).astype(np.int64)
+
             # Impila gli array
-            matrice_discretizzata = np.vstack((nuove_posizioni,matrice_discretizzata))
-        return matrice_discretizzata.T
+            discretized_matrix = np.vstack((new_positions,discretized_matrix))
+
+        result = discretized_matrix.T
+
+        # exists_cut_values boolean for the warning in the gui
+        exists_cut_values = False
+        exists_cut_values = any((val > 100 or val < 0) for row in result for val in row[:-1])
+        # clip values >100 and <0
+        if exists_cut_values:
+            result[:, :-1] = np.clip(result[:, :-1], 0, 100)
+
+        return result, exists_cut_values
 
 class SinusoidalMovement(Movement):
     # startTime, endTime in MILLISECONDS
@@ -188,16 +224,46 @@ class SinusoidalMovement(Movement):
     # phase(or amplitude shift) in RADIANT (-1,1)
     # deltaT sampling period in SECONDS (periodo di campionamento in secondi) - 0.065
     # y_init starting point of the sinusoid on the y axis
-    def __init__(self, startTime, endTime, amplitude, frequency, phase, y_init,deltaT=70):
+    def __init__(self, startTime=None, endTime=None, deltaT=None, item=None):
         super().__init__(startTime, endTime)
-        self.amplitude = amplitude
-        a = np.array(frequency)
-        self.frequency = (a/1000).tolist()
-        self.phase = phase
-        self.deltaT = deltaT/1000 # Periodo di campionamento (riporto in secondi)
-        self.y_init = y_init
+
+        if item is None:
+            raise TypeError("The 'item' parameter cannot be None")
         
+        self.item = item
+        self.values = item["values"] # values of the item (movement)  
+        
+        self.amplitude = []
+        for i in range(2,8):
+            self.amplitude.append(int(self.values[i][0]))
+            
+        temp  = []
+        for i in range(2,8):
+            temp.append(int(self.values[i][1]))
+        a = np.array(temp)
+        self.frequency = a/1000 #Converting from sampling period to sampling rate
+        
+        self.phase = []
+        for i in range(2,8):
+            self.phase.append(float(self.values[i][2]))
+        
+        self.y_init = []
+        for i in range(2,8):
+            self.y_init.append(int(self.values[i][3]))
+
+        self.deltaT = deltaT
+
     def discretize(self):
+        if all(var is None for var in [self.startTime, self.endTime, self.deltaT]):      
+            self.startTime = int(self.values[0]) #take the start time from the item
+            self.endTime = int(self.values[1]) #...
+            self.deltaT = (int(self.values[8]))/1000 #in secondi
+        elif all(var is not None for var in [self.startTime, self.endTime, self.deltaT]):
+            pass
+        else:
+            raise TypeError("All arguments must be null or all non-null")
+        
+
         # Converte gli istanti di tempo da millisecondi a secondi per il calcolo
         self.startTime = self.startTime / 1000
         self.endTime = self.endTime / 1000
@@ -205,7 +271,8 @@ class SinusoidalMovement(Movement):
         # Genera un array di tempi da startTime a end_time con intervalli di deltaT(periodo di campionamento)
         t = np.arange(self.startTime, self.endTime, self.deltaT)
         t_millis = t*1000 #per l'output si usano i millisecondi
-        
+
+        #first element
         column1 = self.amplitude[5] * np.sin(2 * np.pi * self.frequency[5] * t + self.phase[5]) + self.y_init[5]
         y = np.vstack((column1,t_millis)) 
         for i in range(4,-1,-1):
@@ -215,9 +282,17 @@ class SinusoidalMovement(Movement):
             # self.y_init è l'offset che permette all'utente di decidere su quale valore y iniziare
             column_i = self.amplitude[i] * np.sin(2 * np.pi * self.frequency[i] * t + self.phase[i]) + self.y_init[i] 
             y = np.vstack((column_i,y))
-            
+   
         matrix = y.astype(np.int64) #to int
-        return matrix.T 
+        result = matrix.T
+
+        # exists_cut_values boolean for the warning in the gui
+        exists_cut_values = False
+        exists_cut_values = any((val > 100 or val < 0) for row in result for val in row[:-1])
+        # clip values >100 and <0
+        if exists_cut_values:
+            result[:, :-1] = np.clip(result[:, :-1], 0, 100)
+        return result, exists_cut_values
     
 class ComplexMovement(Movement):
         def __init__(self, startTime, endTime, deltaT, movements):
@@ -226,41 +301,7 @@ class ComplexMovement(Movement):
             self.movements = movements
 
         def discretize(self):
-            # Discretize all the submovements
-            result_discr = []
-            for mov in self.movements:
-                result_discr.append(PreDiscr.pre_discretize(mov,self.deltaT)[0]) 
-
-            final_result = []
-            t_cut = 0
-            for i, movement in enumerate(result_discr):
-                t_start = movement[0][6]
-
-                t_start_prev_movement = None
-                if i - 1 >= 0:
-                    t_start_prev_movement= result_discr[i-1][0][6]
-
-                t_start_next_movement = None
-                if i + 1 < len(result_discr):
-                    t_start_next_movement = result_discr[i+1][0][6]
-
-                if t_start_next_movement is None:
-                    for row in movement:
-                        if row[6] >= t_cut:
-                            final_result.append(row)
-                else:
-                    for row in movement:
-                        if row[6] <= t_start_next_movement and row[6] >= t_cut:
-                            final_result.append(row)
-                        else:
-                            t_cut = row[6]
-                            break
-
-            print(self.startTime)
-            print(self.endTime)
-            print(self.deltaT)
-            print("------------")
-            print(final_result)
-            return final_result
+            
+            return 
             
             

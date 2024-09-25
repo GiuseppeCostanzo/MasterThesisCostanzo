@@ -254,15 +254,20 @@ def execute_movement(item):
         
           
 #funzione per visualizzare un movimento in frame3*************************************************************
-def visualize_movement(gui_instance,item):
-
-    if item['type'] == 'linear':
-        d = LinearMovement(item=item)
-        movement, flag = d.discretize()
+def visualize_movement(gui_instance,movement):
 
     if movement is None:
         messagebox.showerror("Error", "Select or import a movement correctly")
         return 
+
+    result = None
+    if movement['type'] == 'linear':
+        d = LinearMovement(item=movement)
+        result, flag = d.discretize()
+    
+    if movement['type'] == 'sinusoidal':
+        d = SinusoidalMovement(item=movement)
+        result, flag = d.discretize()
     
     # Creazione della finestra di input
     input_window = tk.Toplevel(gui_instance)
@@ -272,14 +277,14 @@ def visualize_movement(gui_instance,item):
     
     # Table (in input_window)
     headers = ["Thumb(B)", "Thumb(L)","Index","Middle","Ring/Pinky","Forearm","Time instant (ms)"]
-    table = Toolbox.create_table(input_window, headers, movement)
+    table = Toolbox.create_table(input_window, headers, result)
     table.pack(expand=True, fill="both")
     
     # Frame 2 (contiene checkbox+plot)
     frame2 = tk.Frame(input_window)
     frame2.pack(side="top", expand=True, fill="both", padx=1, pady=1)
     frame2.pack_propagate(True) 
-    Toolbox.create_plot(frame2,movement)
+    Toolbox.create_plot(frame2,result)
     
     if flag is True:
         messagebox.showinfo("Info", "There are values ​​that exceed the range 0-100. A cut has been made")
