@@ -159,6 +159,7 @@ class LinearMovement(Movement):
     def __init__(self, startTime=None, endTime=None, deltaT=None, item=None):
         super().__init__(startTime, endTime)
 
+        self.flag = False
         if item is None:
             raise TypeError("The 'item' parameter cannot be None")
 
@@ -167,11 +168,17 @@ class LinearMovement(Movement):
 
         self.fromPos = [] #take all start pos
         for i in range(0,len(self.values[0])-1):
-            self.fromPos.append(int(self.values[0][i]))
+            if self.values[0][i] == 'NaN':
+                self.fromPos.append(np.nan)
+            else:
+                self.fromPos.append(int(self.values[0][i]))
 
         self.toPos = [] #take all end pos
         for i in range(0,len(self.values[1])-1):
-            self.toPos.append(int(self.values[1][i]))
+            if self.values[1][i] == 'NaN':
+                self.toPos.append(np.nan)
+            else:
+                self.toPos.append(int(self.values[1][i]))
 
         self.deltaT = deltaT
 
@@ -181,8 +188,9 @@ class LinearMovement(Movement):
             self.startTime = int(self.values[0][6]) #take the start time from the item
             self.endTime = int(self.values[1][6])  #take the end time from the item    
             self.deltaT = int(self.values[2]) #take the deltaT
+       
         elif all(var is not None for var in [self.startTime, self.endTime, self.deltaT]):
-            pass
+            self.flag = True
         else:
             raise TypeError("All arguments must be null or all non-null")
 
@@ -193,16 +201,31 @@ class LinearMovement(Movement):
         # Genera array di tempi discreti per il set corrente di parametri
         discrete_times = (np.linspace(self.startTime, self.endTime, L)).astype(np.int64)
 
+        discrete_positions = None
+        print(len(self.fromPos))
+        print(len(self.toPos))
         # Restituisce numeri equidistanti in un intervallo specificato L 
-        discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], L)).astype(np.int64)
+        if np.isnan(self.fromPos[5]) and np.isnan(self.toPos[5]):
+            discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], L))
+        elif not np.isnan(self.fromPos[5]) and not np.isnan(self.toPos[5]):
+            discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], L)).astype(np.int64)
+        else:
+            raise ValueError("Error in LinearDiscretize. fromPos and toPos must both be nan or both not NaN")
 
         # Impila gli array
         discretized_matrix = np.vstack((discrete_positions, discrete_times))
 
         # Il for è al contrario, va dall'ultimo elemento al primo per mantenere l'ordine stabilito del sistema
         for i in range(4,-1,-1):
-            new_positions = (np.linspace(self.fromPos[i], self.toPos[i], L)).astype(np.int64)
 
+            new_positions = None
+            if np.isnan(self.fromPos[i]) and np.isnan(self.toPos[i]):
+                new_positions = (np.linspace(self.fromPos[i], self.toPos[i], L))
+            elif not np.isnan(self.fromPos[i]) and not np.isnan(self.toPos[i]):
+                new_positions = (np.linspace(self.fromPos[i], self.toPos[i], L)).astype(np.int64)
+            else:
+                raise ValueError("Error in LinearDiscretize. fromPos and toPos must both be nan or both not NaN")
+            
             # Impila gli array
             discretized_matrix = np.vstack((new_positions,discretized_matrix))
 
@@ -214,6 +237,12 @@ class LinearMovement(Movement):
         # clip values >100 and <0
         if exists_cut_values:
             result[:, :-1] = np.clip(result[:, :-1], 0, 100)
+
+        if self.flag is False:
+            # Sostituzione dei NaN con 50 se la funzione è stata direttamente chiamata dalla GUI (e quindi non siamo in un 
+            # contesto di una movimento complesso più esterno)
+            result = np.nan_to_num(result, nan=50)
+            result = result.astype(np.int64)
 
         return result, exists_cut_values
 
@@ -227,6 +256,7 @@ class SinusoidalMovement(Movement):
     def __init__(self, startTime=None, endTime=None, deltaT=None, item=None):
         super().__init__(startTime, endTime)
 
+        self.flag = False
         if item is None:
             raise TypeError("The 'item' parameter cannot be None")
         
@@ -235,21 +265,33 @@ class SinusoidalMovement(Movement):
         
         self.amplitude = []
         for i in range(2,8):
-            self.amplitude.append(int(self.values[i][0]))
+            if self.values[i][0] == 'NaN':
+                self.amplitude.append(np.nan)
+            else:
+                self.amplitude.append(int(self.values[i][0]))
             
         temp  = []
         for i in range(2,8):
-            temp.append(int(self.values[i][1]))
+            if self.values[i][1] == 'NaN':
+                temp.append(np.nan)
+            else:
+                temp.append(int(self.values[i][1]))
         a = np.array(temp)
         self.frequency = a/1000 #Converting from sampling period to sampling rate
         
         self.phase = []
         for i in range(2,8):
-            self.phase.append(float(self.values[i][2]))
+            if self.values[i][2] == 'NaN':
+                 self.phase.append(np.nan)
+            else:
+                self.phase.append(float(self.values[i][2]))
         
         self.y_init = []
         for i in range(2,8):
-            self.y_init.append(int(self.values[i][3]))
+            if self.values[i][3] == 'NaN':
+                self.y_init.append(np.nan)
+            else:
+                self.y_init.append(int(self.values[i][3]))
 
         self.deltaT = deltaT
 
@@ -259,11 +301,11 @@ class SinusoidalMovement(Movement):
             self.endTime = int(self.values[1]) #...
             self.deltaT = (int(self.values[8]))/1000 #in secondi
         elif all(var is not None for var in [self.startTime, self.endTime, self.deltaT]):
-            pass
+            self.deltaT = self.deltaT/1000     
+            self.flag = True      
         else:
             raise TypeError("All arguments must be null or all non-null")
         
-
         # Converte gli istanti di tempo da millisecondi a secondi per il calcolo
         self.startTime = self.startTime / 1000
         self.endTime = self.endTime / 1000
@@ -282,26 +324,74 @@ class SinusoidalMovement(Movement):
             # self.y_init è l'offset che permette all'utente di decidere su quale valore y iniziare
             column_i = self.amplitude[i] * np.sin(2 * np.pi * self.frequency[i] * t + self.phase[i]) + self.y_init[i] 
             y = np.vstack((column_i,y))
-   
-        matrix = y.astype(np.int64) #to int
-        result = matrix.T
 
+        result = y.T
+        
         # exists_cut_values boolean for the warning in the gui
         exists_cut_values = False
         exists_cut_values = any((val > 100 or val < 0) for row in result for val in row[:-1])
         # clip values >100 and <0
         if exists_cut_values:
             result[:, :-1] = np.clip(result[:, :-1], 0, 100)
+
+        if self.flag is False:
+            # Sostituzione dei NaN con 50 se la funzione è stata direttamente chiamata dalla GUI (e quindi non siamo in un 
+            # contesto di una movimento complesso più esterno)
+            result = np.nan_to_num(result, nan=50)
+            result = result.astype(np.int64)
+
         return result, exists_cut_values
     
+# item must be a list of dictionary (elements_in_tree_view)
 class ComplexMovement(Movement):
-        def __init__(self, startTime, endTime, deltaT, movements):
+        def __init__(self, startTime, endTime, deltaT, item):
             super().__init__(startTime, endTime)
+
+            if item is None:
+                raise TypeError("The 'item' parameter cannot be None")
             self.deltaT = deltaT
-            self.movements = movements
+            self.item = item
 
         def discretize(self):
-            
+            if all(var is None for var in [self.startTime, self.endTime, self.deltaT]):    
+                # Sort the dictionary w.r.t to index(level) 
+                r = Toolbox.sort_and_structure(self.item)
+
+                # Delete the "head" of a complex movements (does not contain values)
+                result_without_head_complex = [diz for diz in r if diz.get("type") != "complex"]
+
+                
+                # Smallest deltaT, t_start and t_end calculation
+                deltaT = 999999
+                t_start = 999999
+                t_end = -1
+                for movement in result_without_head_complex:
+                    var = int(movement['values'][-1])
+                    if var <= deltaT:
+                        deltaT = var
+                    
+                    #smallest t_start 
+                    if movement['type'] == 'sinusoidal':
+                        var = int(movement['values'][0])
+                        if var <= t_start:
+                            t_start = var
+
+                    if movement['type'] == 'linear':
+                        var = int(movement['values'][0][-1])
+                        if var <= t_start:
+                            t_start = var         
+
+                    #biggest t_end
+                    if movement['type'] == 'sinusoidal':
+                        var = int(movement['values'][1])
+                        if var >= t_end:
+                            t_end = var
+
+                    if movement['type'] == 'linear':
+                        var = int(movement['values'][1][-1])
+                        if var >= t_end:
+                            t_end = var  
+
             return 
             
             

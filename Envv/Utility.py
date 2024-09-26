@@ -21,7 +21,8 @@ class Toolbox(tk.Frame):
             tree.column(header, width=80)
 
         # Aggiunta dati
-        for row in data:
+        data_new = data.tolist()
+        for row in data_new:
             tree.insert("", "end", values=row)
 
         # Scrollbar
