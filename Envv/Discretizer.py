@@ -182,7 +182,7 @@ class SinusoidalMovement(Movement):
         self.endTime = self.endTime / 1000
 
         # Genera un array di tempi da startTime a end_time con intervalli di deltaT(periodo di campionamento)
-        t = np.arange(self.startTime, self.endTime, self.deltaT)
+        t = np.arange(self.startTime, self.endTime+self.deltaT, self.deltaT)
         t_millis = t*1000 #per l'output si usano i millisecondi
 
         t_external = None
@@ -191,7 +191,7 @@ class SinusoidalMovement(Movement):
             self.startTimePassed = self.startTimePassed / 1000
             self.endTimePassed = self.endTimePassed / 1000
 
-            t_external = np.arange(self.startTimePassed, self.endTimePassed, self.deltaT)
+            t_external = np.arange(self.startTimePassed, self.endTimePassed+self.deltaT, self.deltaT)
             t_millis_external = t_external*1000 #per l'output si usano i millisecondi
 
         #first element
@@ -224,6 +224,9 @@ class SinusoidalMovement(Movement):
             num_rows = len(t_millis_external)
             num_cols = 7
             large_matrix = np.full((num_rows, num_cols), np.nan)
+            print(len(large_matrix))
+            print(len(result))
+
 
             start_time = result[0, -1]  # ritorna il primo istante di tempo nella matrice piccola
             start_index = int(start_time / (self.deltaT*1000)) #indice di partenza per posizionare la matrice piccola
@@ -236,23 +239,23 @@ class SinusoidalMovement(Movement):
     
 # item must be a list of dictionary (elements_in_tree_view)
 class ComplexMovement(Movement):
-        def __init__(self, startTime, endTime, deltaT, item):
+        def __init__(self, startTime=None, endTime=None, deltaT=None, item=None):
             super().__init__(startTime, endTime)
 
             if item is None:
                 raise TypeError("The 'item' parameter cannot be None")
+            
             self.deltaT = deltaT
             self.item = item
 
         def discretize(self):
-            if all(var is None for var in [self.startTime, self.endTime, self.deltaT]):    
+            if all(var is None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):    
                 # Sort the dictionary w.r.t to index(level) 
                 r = Toolbox.sort_and_structure(self.item)
 
                 # Delete the "head" of a complex movements (does not contain values)
                 result_without_head_complex = [diz for diz in r if diz.get("type") != "complex"]
 
-                
                 # Smallest deltaT, t_start and t_end calculation
                 deltaT = 999999
                 t_start = 999999
@@ -283,7 +286,17 @@ class ComplexMovement(Movement):
                         var = int(movement['values'][1][-1])
                         if var >= t_end:
                             t_end = var  
+                
 
-            return 
+                result =  np.full((rows, 7), np.nan)
+                for submov in result_without_head_complex:
+                    m2 = None
+                    if submov['values'] == 'linear':
+                        d = LinearMovement(t_start,t_end,deltaT,submov)
+                        result = np.where(np.isnan(result), result, d)
+
+                    
+
+            return None,None
             
             
