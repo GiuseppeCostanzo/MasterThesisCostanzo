@@ -159,12 +159,20 @@ class LinearMovement(Movement):
     def __init__(self, startTime=None, endTime=None, deltaT=None, item=None):
         super().__init__(startTime, endTime)
 
-        self.flag = False
         if item is None:
             raise TypeError("The 'item' parameter cannot be None")
-
+        
         self.item = item
         self.values = item["values"] # values of the item (movement)
+
+        self.startTimePassed = startTime
+        self.endTimePassed = endTime
+        self.deltaT = deltaT
+
+        self.startTime = int(self.values[0][6]) #take the start time from the item (json)
+        self.endTime = int(self.values[1][6])  #take the end time from the item (json)
+
+        self.flag = False
 
         self.fromPos = [] #take all start pos
         for i in range(0,len(self.values[0])-1):
@@ -180,16 +188,13 @@ class LinearMovement(Movement):
             else:
                 self.toPos.append(int(self.values[1][i]))
 
-        self.deltaT = deltaT
 
     def discretize(self):
         # Some check
-        if all(var is None for var in [self.startTime, self.endTime, self.deltaT]):      
-            self.startTime = int(self.values[0][6]) #take the start time from the item
-            self.endTime = int(self.values[1][6])  #take the end time from the item    
-            self.deltaT = int(self.values[2]) #take the deltaT
+        if all(var is None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):      
+            self.deltaT = int(self.values[2]) #take the deltaT from item (json)
        
-        elif all(var is not None for var in [self.startTime, self.endTime, self.deltaT]):
+        elif all(var is not None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):
             self.flag = True
         else:
             raise TypeError("All arguments must be null or all non-null")
@@ -198,12 +203,16 @@ class LinearMovement(Movement):
         # Calcola il numero di intervalli discreti
         L = int(np.round((self.endTime - self.startTime) / self.deltaT)) + 1
 
+        L_external = None
+        discrete_times_external = None
+        if self.flag is True:
+            L_external = int(np.round((self.endTimePassed - self.startTimePassed) / self.deltaT)) + 1
+            discrete_times_external = (np.linspace(self.startTimePassed, self.endTimePassed, L_external)).astype(np.int64)
+
         # Genera array di tempi discreti per il set corrente di parametri
         discrete_times = (np.linspace(self.startTime, self.endTime, L)).astype(np.int64)
 
         discrete_positions = None
-        print(len(self.fromPos))
-        print(len(self.toPos))
         # Restituisce numeri equidistanti in un intervallo specificato L 
         if np.isnan(self.fromPos[5]) and np.isnan(self.toPos[5]):
             discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], L))
@@ -243,8 +252,18 @@ class LinearMovement(Movement):
             # contesto di una movimento complesso più esterno)
             result = np.nan_to_num(result, nan=50)
             result = result.astype(np.int64)
+            return result, exists_cut_values
+        else:
+            num_rows_large = len(discrete_times_external)
+            num_cols = 7
+            large_matrix = np.full((num_rows_large, num_cols), np.nan)
 
-        return result, exists_cut_values
+            start_time = result[0, -1]  # ritorna il primo istante di tempo nella matrice piccola
+            start_index = int(start_time / self.deltaT)
+            large_matrix[start_index:start_index + result.shape[0], :] = result
+
+            large_matrix[:, -1] = discrete_times_external
+            return large_matrix, exists_cut_values
 
 class SinusoidalMovement(Movement):
     # startTime, endTime in MILLISECONDS
