@@ -7,6 +7,7 @@ import serial
 import json
 import os
 import time
+import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
@@ -1248,6 +1249,7 @@ class GUI(tk.Tk):
                 for mov in elements_in_tree_view:
                     if mov["id"] == selected_item_tree_view["id"]:
                         mov = selected_item_tree_view.copy()
+                        break
                 messagebox.showinfo("Info", "Updated movement")
                 return
             
@@ -1263,12 +1265,13 @@ class GUI(tk.Tk):
                 for mov in elements_in_tree_view:
                     if mov["id"] == selected_item_tree_view["id"]:
                         mov = selected_item_tree_view.copy()
+                        break
                 messagebox.showinfo("Info", "Updated movement")
                 return
 
             if type == "complex":
                 scale_complex(value,selected_item_tree_view["id"])
-                print(elements_in_tree_view)
+                #print(elements_in_tree_view)
                 messagebox.showinfo("Info", "Updated complex movement")
                 return
 
@@ -1305,7 +1308,34 @@ class GUI(tk.Tk):
             
         #inverte i valori del movimento
         def flip():
-            print("flip")
+
+            if selected_item_tree_view is None:
+                messagebox.showerror("Error", "Select a movement")
+                return
+            
+            if selected_item_tree_view['type'] == "linear":
+                pos_start = selected_item_tree_view['values'][0][:-1]
+                pos_end = selected_item_tree_view['values'][1][:-1]
+
+                selected_item_tree_view['values'][0][:-1] = pos_end
+                selected_item_tree_view['values'][1][:-1] = pos_start
+
+                for mov in elements_in_tree_view:
+                    if mov["id"] == selected_item_tree_view["id"]:
+                        mov = selected_item_tree_view.copy()
+                        break
+                messagebox.showinfo("Info", "Updated movement")
+                return
+            
+            if selected_item_tree_view['type'] == "sinusoidal":
+                values = selected_item_tree_view['values']
+                for i, val in enumerate(values):
+                    if i>= 2 and i<=7:
+                        pass
+
+                print("sinusoidal")           
+            if selected_item_tree_view['type'] == "complex":
+                print("complex")
             
             
         #update the indexes (levels) of the elements in treeview (called on import json or click "up" or "down", "delete_item" e "import_json")
@@ -1486,7 +1516,7 @@ class GUI(tk.Tk):
         modify_menu.add_command(label="Specific",command=lambda: scale_specific())
         file_menu.add_cascade(label="Scale", menu=modify_menu)
         
-        file_menu.add_command(label="Flip", command=flip)
+        file_menu.add_command(label="Flip", command=lambda: flip())
         
         tree.bind("<<TreeviewSelect>>", on_tree_select)
         

@@ -315,14 +315,14 @@ class SinusoidalMovement(Movement):
         t_millis = t*1000 #per l'output si usano i millisecondi
 
         #first element
-        column1 = self.amplitude[5] * np.sin(2 * np.pi * self.frequency[5] * t + self.phase[5]) + self.y_init[5]
+        column1 = self.amplitude[5] * np.sin(2 * np.pi * self.frequency[5] * t + (self.phase[5]*np.pi)) + self.y_init[5]
         y = np.vstack((column1,t_millis)) 
         for i in range(4,-1,-1):
             
             # Calcola i valori della sinusoide
             # y è un array di valori che rappresentano l'ampiezza della sinusoide in corrispondenza di ciascun istante di tempo t
             # self.y_init è l'offset che permette all'utente di decidere su quale valore y iniziare
-            column_i = self.amplitude[i] * np.sin(2 * np.pi * self.frequency[i] * t + self.phase[i]) + self.y_init[i] 
+            column_i = self.amplitude[i] * np.sin(2 * np.pi * self.frequency[i] * t + (self.phase[i]*np.pi)) + self.y_init[i] 
             y = np.vstack((column_i,y))
 
         result = y.T
