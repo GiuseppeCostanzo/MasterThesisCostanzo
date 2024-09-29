@@ -54,23 +54,21 @@ class LinearMovement(Movement):
             raise TypeError("All arguments must be null or all non-null")
 
         # Discretize
-        # Calcola il numero di intervalli discreti
-        L = int(np.round((self.endTime - self.startTime) / self.deltaT)) + 1
-        # Genera array di tempi discreti per il set corrente di parametri
-        discrete_times = (np.linspace(self.startTime, self.endTime, L)).astype(np.int64)
+        # Genera un array di tempi da startTime a end_time con intervalli di deltaT(periodo di campionamento)
+        discrete_times = np.arange(self.startTime, self.endTime+self.deltaT, self.deltaT)
 
-        L_external = None
+        #L_external = None
         discrete_times_external = None
         if self.flag is True:
-            L_external = int(np.round((self.endTimePassed - self.startTimePassed) / self.deltaT)) + 1
-            discrete_times_external = (np.linspace(self.startTimePassed, self.endTimePassed, L_external)).astype(np.int64)
+
+            discrete_times_external = np.arange(self.startTimePassed, self.endTimePassed+self.deltaT, self.deltaT)
 
         discrete_positions = None
         # Restituisce numeri equidistanti in un intervallo specificato L 
         if np.isnan(self.fromPos[5]) and np.isnan(self.toPos[5]):
-            discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], L))
+            discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], len(discrete_times)))
         elif not np.isnan(self.fromPos[5]) and not np.isnan(self.toPos[5]):
-            discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], L)).astype(np.int64)
+            discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], len(discrete_times))).astype(np.int64)
         else:
             raise ValueError("Error in LinearDiscretize. fromPos and toPos must both be nan or both not NaN")
 
@@ -79,12 +77,11 @@ class LinearMovement(Movement):
 
         # Il for è al contrario, va dall'ultimo elemento al primo per mantenere l'ordine stabilito del sistema
         for i in range(4,-1,-1):
-
             new_positions = None
             if np.isnan(self.fromPos[i]) and np.isnan(self.toPos[i]):
-                new_positions = (np.linspace(self.fromPos[i], self.toPos[i], L))
+                new_positions = (np.linspace(self.fromPos[i], self.toPos[i], len(discrete_times)))
             elif not np.isnan(self.fromPos[i]) and not np.isnan(self.toPos[i]):
-                new_positions = (np.linspace(self.fromPos[i], self.toPos[i], L)).astype(np.int64)
+                new_positions = (np.linspace(self.fromPos[i], self.toPos[i], len(discrete_times))).astype(np.int64)
             else:
                 raise ValueError("Error in LinearDiscretize. fromPos and toPos must both be nan or both not NaN")
             
@@ -110,9 +107,8 @@ class LinearMovement(Movement):
             num_rows = len(discrete_times_external)
             num_cols = 7
             large_matrix = np.full((num_rows, num_cols), np.nan)
-
             start_time = result[0, -1]  # ritorna il primo istante di tempo nella matrice piccola
-            start_index = int(start_time / self.deltaT)
+            start_index = round((start_time - self.startTimePassed) / self.deltaT)
             large_matrix[start_index:start_index + result.shape[0], :] = result
             large_matrix[:, -1] = discrete_times_external
             return large_matrix, exists_cut_values
@@ -170,39 +166,40 @@ class SinusoidalMovement(Movement):
 
     def discretize(self):
         if all(var is None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):      
-            self.deltaT = (int(self.values[8]))/1000 #take the deltaT from item (json) - to second
+            self.deltaT = (int(self.values[8])) #take the deltaT from item (json) - to second
         elif all(var is not None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):
-            self.deltaT = self.deltaT/1000     
+            self.deltaT = self.deltaT     
             self.flag = True      
         else:
             raise TypeError("All arguments must be null or all non-null")
         
         # Converte gli istanti di tempo da millisecondi a secondi per il calcolo
-        self.startTime = self.startTime / 1000
-        self.endTime = self.endTime / 1000
+        #self.startTime = self.startTime / 1000
+        #self.endTime = self.endTime / 1000
 
         # Genera un array di tempi da startTime a end_time con intervalli di deltaT(periodo di campionamento)
         t = np.arange(self.startTime, self.endTime+self.deltaT, self.deltaT)
-        t_millis = t*1000 #per l'output si usano i millisecondi
+        #t_millis = t*1000 #per l'output si usano i millisecondi
+        #print(t_millis)
 
         t_external = None
-        t_millis_external = None
+        #t_millis_external = None
         if self.flag is True:
-            self.startTimePassed = self.startTimePassed / 1000
-            self.endTimePassed = self.endTimePassed / 1000
+            #self.startTimePassed = self.startTimePassed / 1000
+            #self.endTimePassed = self.endTimePassed / 1000
 
             t_external = np.arange(self.startTimePassed, self.endTimePassed+self.deltaT, self.deltaT)
-            t_millis_external = t_external*1000 #per l'output si usano i millisecondi
+            #t_millis_external = t_external*1000 #per l'output si usano i millisecondi
 
         #first element
-        column1 = self.amplitude[5] * np.sin(2 * np.pi * self.frequency[5] * t + (self.phase[5]*np.pi)) + self.y_init[5]
-        y = np.vstack((column1,t_millis)) 
+        column1 = self.amplitude[5] * np.sin(2 * np.pi * self.frequency[5] * (t/1000) + (self.phase[5]*np.pi)) + self.y_init[5]
+        y = np.vstack((column1,t)) 
         for i in range(4,-1,-1):
             
             # Calcola i valori della sinusoide
             # y è un array di valori che rappresentano l'ampiezza della sinusoide in corrispondenza di ciascun istante di tempo t
             # self.y_init è l'offset che permette all'utente di decidere su quale valore y iniziare
-            column_i = self.amplitude[i] * np.sin(2 * np.pi * self.frequency[i] * t + (self.phase[i]*np.pi)) + self.y_init[i] 
+            column_i = self.amplitude[i] * np.sin(2 * np.pi * self.frequency[i] * (t/1000) + (self.phase[i]*np.pi)) + self.y_init[i] 
             y = np.vstack((column_i,y))
 
         result = y.T
@@ -221,17 +218,13 @@ class SinusoidalMovement(Movement):
             result = result.astype(np.int64)
             return result, exists_cut_values
         else:
-            num_rows = len(t_millis_external)
+            num_rows = len(t_external)
             num_cols = 7
             large_matrix = np.full((num_rows, num_cols), np.nan)
-            print(len(large_matrix))
-            print(len(result))
-
-
             start_time = result[0, -1]  # ritorna il primo istante di tempo nella matrice piccola
-            start_index = int(start_time / (self.deltaT*1000)) #indice di partenza per posizionare la matrice piccola
+            start_index = int((start_time - self.startTimePassed) / (self.deltaT)) #indice di partenza per posizionare la matrice piccola
             large_matrix[start_index:start_index + result.shape[0], :] = result
-            large_matrix[:, -1] = t_millis_external #metto gli istanti di tempo esterni
+            large_matrix[:, -1] = t_external #metto gli istanti di tempo esterni
             return large_matrix, exists_cut_values
 
 
@@ -295,7 +288,11 @@ class ComplexMovement(Movement):
                         d = LinearMovement(t_start,t_end,deltaT,submov)
                         result = np.where(np.isnan(result), result, d)
 
-                    
+            elif all(var is not None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):
+                print("gestire")
+
+            else:
+                raise TypeError("All arguments must be null or all non-null")
 
             return None,None
             
