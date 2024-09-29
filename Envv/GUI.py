@@ -258,7 +258,6 @@ def execute_movement(item):
 def visualize_movement(gui_instance,movement):
 
     result = None
-
     if isinstance(movement, dict):
         if movement['type'] == 'linear':
             d = LinearMovement(item=movement)
@@ -1526,6 +1525,7 @@ class GUI(tk.Tk):
             
             if selected_item_tree_view['type'] == "complex":
                 result = find_elements(elements_in_tree_view, selected_item_tree_view['id'])
+                print("MOVIMENTO DA VISUALIZZARE",result)
                 visualize_movement(gui_instance,result)
             else:
                 visualize_movement(gui_instance, selected_item_tree_view)

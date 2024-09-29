@@ -236,7 +236,6 @@ class ComplexMovement(Movement):
 
         def discretize(self):  
 
-            print(self.item)
             # Sort the dictionary w.r.t to index(level) 
             r = Toolbox.sort_and_structure(self.item)
 

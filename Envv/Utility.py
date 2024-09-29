@@ -5,6 +5,7 @@ import tkinter as tk
 import json
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+import copy
 
 class Toolbox(tk.Frame): 
 
@@ -80,8 +81,42 @@ class Toolbox(tk.Frame):
 
     # Used in discretize complex movement
     def sort_and_structure(data):
+        data_copied = copy.deepcopy(data)
+        # Identificare la radice 
+        # Filtra solo i dizionari di tipo 'complex'
+        dict_complex = [d for d in data_copied if d['type'] == 'complex']
+
+        if len(dict_complex) == 1:
+
+            dizionario_diverso = dict_complex[0]
+            for d in data_copied:
+                if d['id'] == dizionario_diverso['id']:
+                    d['root'] = ''
+                    break
+        elif len(dict_complex) > 1:
+            
+            # Trova le roots
+            roots = {d['root'] for d in dict_complex}
+
+            if len(roots) == 2:
+            # Trova la root che appare più volte
+                root_comune = max(roots, key=lambda r: sum(1 for d in dict_complex if d['root'] == r))
+
+                dizionario_diverso = next((d for d in dict_complex if d['root'] != root_comune), None)
+                if dizionario_diverso:
+                    # Aggiorna la root nel dizionario originale
+                    for d in data_copied:
+                        if d['id'] == dizionario_diverso['id']:
+                            d['root'] = ''
+                            break
+            else:
+                print("Error in sort_and_Structure 1")
+                root_comune = None
+        else:
+            print("Error in sort_and_structure 2")
+
         # Ordina la lista di dizionari in base all'indice
-        sorted_data = sorted(data, key=lambda x: int(x['index']))
+        sorted_data = sorted(data_copied, key=lambda x: int(x['index']))
         
         # Dizionario per trovare rapidamente un elemento per id
         id_map = {item['id']: item for item in sorted_data}
