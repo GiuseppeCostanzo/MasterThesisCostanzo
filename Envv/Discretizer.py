@@ -7,8 +7,6 @@ class Movement(ABC):
     def __init__(self, startTime, endTime):
         self.startTimePassed = startTime
         self.endTimePassed = endTime
-        #L=(np.round((self.endTime-self.startTime)/deltaT)+1).astype(np.int64)
-        #self.DiscreteMov=None
 
     @abstractmethod
     def discretize(self):
@@ -60,7 +58,6 @@ class LinearMovement(Movement):
         #L_external = None
         discrete_times_external = None
         if self.flag is True:
-
             discrete_times_external = np.arange(self.startTimePassed, self.endTimePassed+self.deltaT, self.deltaT)
 
         discrete_positions = None
@@ -227,73 +224,84 @@ class SinusoidalMovement(Movement):
             large_matrix[:, -1] = t_external #metto gli istanti di tempo esterni
             return large_matrix, exists_cut_values
 
-
-
     
 # item must be a list of dictionary (elements_in_tree_view)
 class ComplexMovement(Movement):
-        def __init__(self, startTime=None, endTime=None, deltaT=None, item=None):
-            super().__init__(startTime, endTime)
+        def __init__(self, item=None):
 
             if item is None:
                 raise TypeError("The 'item' parameter cannot be None")
             
-            self.deltaT = deltaT
             self.item = item
 
-        def discretize(self):
-            if all(var is None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):    
-                # Sort the dictionary w.r.t to index(level) 
-                r = Toolbox.sort_and_structure(self.item)
+        def discretize(self):  
 
-                # Delete the "head" of a complex movements (does not contain values)
-                result_without_head_complex = [diz for diz in r if diz.get("type") != "complex"]
+            print(self.item)
+            # Sort the dictionary w.r.t to index(level) 
+            r = Toolbox.sort_and_structure(self.item)
 
-                # Smallest deltaT, t_start and t_end calculation
-                deltaT = 999999
-                t_start = 999999
-                t_end = -1
-                for movement in result_without_head_complex:
-                    var = int(movement['values'][-1])
-                    if var <= deltaT:
-                        deltaT = var
-                    
-                    #smallest t_start 
-                    if movement['type'] == 'sinusoidal':
-                        var = int(movement['values'][0])
-                        if var <= t_start:
-                            t_start = var
+            # Delete the "head" of a complex movements (does not contain values)
+            result_without_head_complex = [diz for diz in r if diz.get("type") != "complex"]
 
-                    if movement['type'] == 'linear':
-                        var = int(movement['values'][0][-1])
-                        if var <= t_start:
-                            t_start = var         
-
-                    #biggest t_end
-                    if movement['type'] == 'sinusoidal':
-                        var = int(movement['values'][1])
-                        if var >= t_end:
-                            t_end = var
-
-                    if movement['type'] == 'linear':
-                        var = int(movement['values'][1][-1])
-                        if var >= t_end:
-                            t_end = var  
+            # Smallest deltaT, t_start and t_end calculation
+            deltaT = 999999
+            t_start = 999999
+            t_end = -1
+            for movement in result_without_head_complex:
+                var = int(movement['values'][-1])
+                if var <= deltaT:
+                    deltaT = var
                 
+                #smallest t_start 
+                if movement['type'] == 'sinusoidal':
+                    var = int(movement['values'][0])
+                    if var <= t_start:
+                        t_start = var
 
-                result =  np.full((rows, 7), np.nan)
-                for submov in result_without_head_complex:
-                    m2 = None
-                    if submov['values'] == 'linear':
-                        d = LinearMovement(t_start,t_end,deltaT,submov)
-                        result = np.where(np.isnan(result), result, d)
+                if movement['type'] == 'linear':
+                    var = int(movement['values'][0][-1])
+                    if var <= t_start:
+                        t_start = var         
 
-            elif all(var is not None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):
-                print("gestire")
+                #biggest t_end
+                if movement['type'] == 'sinusoidal':
+                    var = int(movement['values'][1])
+                    if var >= t_end:
+                        t_end = var
 
-            else:
-                raise TypeError("All arguments must be null or all non-null")
+                if movement['type'] == 'linear':
+                    var = int(movement['values'][1][-1])
+                    if var >= t_end:
+                        t_end = var  
+            
 
-            return None,None
+            discrete_times_external = np.arange(t_start, t_end+deltaT, deltaT)
+            result =  np.full((len(discrete_times_external), 7), np.nan)
+            result[:, -1] = discrete_times_external #metto gli istanti di tempo esterni
+            flag_cut = False
+            for submov in result_without_head_complex:
+                if submov['type'] == 'linear':
+                    d = LinearMovement(t_start,t_end,deltaT,submov)
+                    sub_matrix,flag_return = d.discretize()
+                    result = np.where(np.isnan(sub_matrix), result, sub_matrix)
+                    if flag_return is True:
+                        flag_cut = True
+                if submov['type'] == 'sinusoidal':
+                    d = SinusoidalMovement(t_start,t_end,deltaT,submov)
+                    sub_matrix,flag_return = d.discretize()
+                    result = np.where(np.isnan(sub_matrix), result, sub_matrix)
+                    if flag_return is True:
+                        flag_cut = True
+
+            #If the first row of the final matrix contains any nans, it is replaced with a rest value of 50
+            result[0, :] = np.where(np.isnan(result[0, :]), 50, result[0, :])
+            # Replace the NaN values ​​with the last non-Nan value
+            for i in range(1, result.shape[0]):  
+                for j in range(result.shape[1]):  
+                    if np.isnan(result[i, j]):  
+                        result[i, j] = result[i-1, j]  
+            return result.astype(np.int64),flag_cut
+
+
             
             

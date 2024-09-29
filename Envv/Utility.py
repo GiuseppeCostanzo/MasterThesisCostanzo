@@ -81,7 +81,7 @@ class Toolbox(tk.Frame):
     # Used in discretize complex movement
     def sort_and_structure(data):
         # Ordina la lista di dizionari in base all'indice
-        sorted_data = sorted(data, key=lambda x: x['index'])
+        sorted_data = sorted(data, key=lambda x: int(x['index']))
         
         # Dizionario per trovare rapidamente un elemento per id
         id_map = {item['id']: item for item in sorted_data}
@@ -119,7 +119,7 @@ class Toolbox(tk.Frame):
         return ordered_list
     
 
-    # Creazione del plot
+    # Crea plot
     def create_plot(master, movement):
         figure = Figure(figsize=(50, 50), dpi=75)
         #plot = figure.add_subplot(111)

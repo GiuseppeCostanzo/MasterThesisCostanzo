@@ -257,19 +257,20 @@ def execute_movement(item):
 #funzione per visualizzare un movimento in frame3*************************************************************
 def visualize_movement(gui_instance,movement):
 
-    if movement is None:
-        messagebox.showerror("Error", "Select or import a movement correctly")
-        return 
-
     result = None
-    if movement['type'] == 'linear':
-        d = LinearMovement(item=movement)
+
+    if isinstance(movement, dict):
+        if movement['type'] == 'linear':
+            d = LinearMovement(item=movement)
+            result, flag = d.discretize()
+        
+        if movement['type'] == 'sinusoidal':
+            d = SinusoidalMovement(item=movement)
+            result, flag = d.discretize()
+    else:
+        d = ComplexMovement(item=movement)
         result, flag = d.discretize()
-    
-    if movement['type'] == 'sinusoidal':
-        d = SinusoidalMovement(item=movement)
-        result, flag = d.discretize()
-    
+
     # Creazione della finestra di input
     input_window = tk.Toplevel(gui_instance)
     input_window.title("Movement")
@@ -1500,6 +1501,36 @@ class GUI(tk.Tk):
             elements_in_tree_view.clear() #empty the RAM
             #print(elements_in_tree_view)
             
+
+
+        def find_elements(elements, target_id):
+            # Trova il dizionario con l'id specificato
+            target_dict = next((elem for elem in elements if elem['id'] == target_id), None)
+            if target_dict is None:
+                return []
+
+            # Inizia la lista con il dizionario trovato
+            result = [target_dict]
+
+            # Trova i figli ricorsivamente
+            for elem in elements:
+                if elem['root'] == target_id:
+                    result.extend(find_elements(elements, elem['id']))
+
+            return result
+
+        def vis_mov(gui_instance,movement):
+            if movement is None:
+                messagebox.showerror("Error", "Select or import a movement correctly")
+                return 
+            
+            if selected_item_tree_view['type'] == "complex":
+                result = find_elements(elements_in_tree_view, selected_item_tree_view['id'])
+                visualize_movement(gui_instance,result)
+            else:
+                visualize_movement(gui_instance, selected_item_tree_view)
+            return
+
         # Aggiungere Menubuttons al frame
         file_button = ttk.Menubutton(self.frame3, text="Edit")
         file_button.grid(row=1, column=0)
@@ -1525,15 +1556,14 @@ class GUI(tk.Tk):
                                  command=lambda: execute_movement(selected_item_tree_view))
         button_execute.grid(row=1,column=1)
         
-        button_visualize = tk.Button(self.frame3, text="Visualize", #command=functools.partial(aa))
-                                     command=lambda: visualize_movement(self.frame3, selected_item_tree_view))
+        button_visualize = tk.Button(self.frame3, text="Visualize", 
+                                     command=lambda: vis_mov(self.frame3, selected_item_tree_view))
         button_visualize.grid(row=1,column=2)
         
         button_delete = tk.Button(self.frame3, text="Delete", command=lambda: delete_item(id_item))
         button_delete.grid(row=1,column=3)
 
-        button_clear_all = tk.Button(self.frame3, text="Clear all",
-                                 command=lambda: clear_all())
+        button_clear_all = tk.Button(self.frame3, text="Clear all", command=lambda: clear_all())
         button_clear_all.grid(row=1,column=4)
         
         button_up = tk.Button(self.frame3, text="Up",command=move_up)
@@ -1546,7 +1576,6 @@ class GUI(tk.Tk):
         button_save.grid(row=8,column=0)
         
         
-
 
     # *************************************** FRAME 4 - SINUSOIDAL MOVEMENT **********************************************
     def configure_frame4(self):
