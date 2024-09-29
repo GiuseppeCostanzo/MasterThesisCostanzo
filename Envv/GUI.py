@@ -1308,7 +1308,6 @@ class GUI(tk.Tk):
             
         #inverte i valori del movimento
         def flip():
-
             if selected_item_tree_view is None:
                 messagebox.showerror("Error", "Select a movement")
                 return
@@ -1343,6 +1342,13 @@ class GUI(tk.Tk):
             nonlocal tree
             for item in elements_in_tree_view:
                 item['index'] = tree.index(item['id'])
+                current_text = tree.item(item['id'], 'text')
+
+                if ")" in current_text:
+                    current_text = current_text[3:]
+                
+                updated_text = str(item['index']) + ") " + current_text
+                tree.item(item['id'], text=updated_text)
 
         
         # Used to see if the json import operation was successful, and then populate the treeview
@@ -1405,9 +1411,7 @@ class GUI(tk.Tk):
                 update_index() #updating indexes
             else:
                 return     
-            #print(elements_in_tree_view) 
-                
-                
+            #print(elements_in_tree_view)   
         
         # move a selected element of the treeview up
         def move_up():
@@ -1437,7 +1441,7 @@ class GUI(tk.Tk):
         # it saves selected motion information in selected_item_tree_view
         def on_tree_select(event):
             if len(tree.selection()) == 0:
-                print("tupla vuota in on_tree_select")
+                #print("tupla vuota in on_tree_select")
                 return
             
             nonlocal id_item
@@ -1479,14 +1483,17 @@ class GUI(tk.Tk):
 
 
         #delete an item from treeview 
-        def delete_item(id_item):
-            if id_item is None:
+        def delete_item(idItem):
+            if idItem is None:
                 messagebox.showerror("Error", "Select a movement to delete")
                 return         
-            tree.delete(id_item) #delete the element from the treeview
-            delete_item_recursive(id_item)
+            tree.delete(idItem) #delete the element from the treeview
+            delete_item_recursive(idItem)
             update_index()
-            print(elements_in_tree_view)
+            nonlocal selected_item_tree_view
+            selected_item_tree_view = None
+            nonlocal id_item
+            id_item = None
             return
 
         
@@ -1525,7 +1532,6 @@ class GUI(tk.Tk):
             
             if selected_item_tree_view['type'] == "complex":
                 result = find_elements(elements_in_tree_view, selected_item_tree_view['id'])
-                print("MOVIMENTO DA VISUALIZZARE",result)
                 visualize_movement(gui_instance,result)
             else:
                 visualize_movement(gui_instance, selected_item_tree_view)
