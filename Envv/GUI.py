@@ -17,6 +17,7 @@ from Discretizer import LinearMovement
 from Discretizer import SinusoidalMovement
 from Discretizer import ComplexMovement
 from Utility import Toolbox
+import copy
 
 # Global parameters, eventually to be set
 usbport = 'COM7' # Usb port where arduino is connected 
@@ -374,48 +375,47 @@ def on_save_complex(itemsInput):
         "values": []
     }
 
-    def recursive_save(data, items, root):
-        level = 0 
-        flag = True
-        remove = False
-        while items and flag==True:
-            for element in items:
-                if element["index"] == level and element["root"] == root:
-                    if element["type"] == "linear":
-                        data["values"].append({
-                            "type": "linear",
-                            "values": element["values"]
-                        })
-                        level += 1
-                        remove = True 
-                        break
-                    elif element["type"] == "sinusoidal":
-                        data["values"].append({
-                            "type": "sinusoidal",
-                            "values": element["values"]
-                        })
-                        level += 1
-                        remove = True
-                        break
-                    elif element["type"] == "complex":
-                        id_father = element["id"]
-                        remove = True 
-                        sub_movements = {"type": "complex", "values": []}
-                        res = recursive_save(sub_movements, items, root=id_father)
-                        data["values"].append(res)
-                        level += 1
-                        break
-            else: 
-                # This else is done only if all the elements of the for have been seen 
-                # (that is, no breaks were encountered in the for loop, and thus no matches with the elements)
-                flag = False 
-                #safe delete
-                if(remove==True): 
-                    items.remove(element)
-                    remove = False
-        return data
+    id_visited = []
+    def recursive_save(data, items, root):    
+        nonlocal id_visited      
 
+        level = 0 
+        for element in items:
+            if element["index"] == level and element["root"] == root and element["id"] not in id_visited:
+                if element["type"] == "linear":
+                    data["values"].append({
+                        "type": "linear",
+                        "values": element["values"]
+                    })
+                    level += 1
+                    id_visited.append(element["id"])
+                    print("Visitato",element["id"]) 
+
+                elif element["type"] == "sinusoidal":
+                    data["values"].append({
+                        "type": "sinusoidal",
+                        "values": element["values"]
+                    })
+                    level += 1
+                    id_visited.append(element["id"])
+                    print("Visitato",element["id"]) 
+
+                elif element["type"] == "complex":
+                    id_father = element["id"]  
+                    sub_movements = {"type": "complex", "values": []}
+                    res = recursive_save(sub_movements, items, root=id_father)
+                    data["values"].append(res)
+                    level += 1
+                    id_visited.append(element["id"])
+                    print("Visitato tutto elemento ricorsivo",element["id"]) 
+                else:
+                    print("Error in recursive_save")
+        return data
+    
+    items_copy = copy.deepcopy(items)
+    items_copy = Toolbox.sort_and_structure2(items_copy)
     ris = recursive_save(data, items, '')
+    id_visited = []
     save_movement(ris)
     return True
 
@@ -1181,7 +1181,7 @@ class GUI(tk.Tk):
         
         # funzione per modificare i valori di un movimento base
         def modify():
-            print(selected_item_tree_view)
+            #print(selected_item_tree_view)
             if selected_item_tree_view is None:
                 messagebox.showerror("Error", "Select a movement")
                 return 
@@ -1330,9 +1330,10 @@ class GUI(tk.Tk):
                 values = selected_item_tree_view['values']
                 for i, val in enumerate(values):
                     if i>= 2 and i<=7:
-                        pass
-
-                print("sinusoidal")           
+                        new_value = 1 - float(val[2])
+                        val[2] = str(new_value)       
+                messagebox.showinfo("Info", "Updated movement")
+                return
             if selected_item_tree_view['type'] == "complex":
                 print("complex")
             
@@ -1381,7 +1382,7 @@ class GUI(tk.Tk):
                                                           "type":"sinusoidal","index":None,"root":(tree.parent(id_element))})
                     
                     elif(movement[1]['type'] == 'complex'):
-                        # se il movimento è complesso, faccio una copia una nuova lista
+                        # se il movimento è complesso, faccio una copia di una nuova lista
                         # che popolo con i sotto-movimenti che passo ricorsivamente a 
                         # recursive_reading
                         a = " - Type: Complex movement"
@@ -1400,7 +1401,7 @@ class GUI(tk.Tk):
                             twc.append([">",a])
                         #recursion
                         recursive_reading(id_element,twc)
-                        father_id = None
+                        #father_id = None
 
             if import_json() is True:
                 #tree.delete(*tree.get_children()) #empty the treeview
@@ -1446,18 +1447,13 @@ class GUI(tk.Tk):
             
             nonlocal id_item
             id_item = tree.selection()[0] #id dell'item selezionato
+            print(id_item)
             #elements_in_tree_view è una list di dizionari
             for element in elements_in_tree_view:
                 if id_item == element["id"]:
                     nonlocal selected_item_tree_view
                     #selected_item_tree_view.clear()
                     selected_item_tree_view = element.copy()
-                    '''print("id: " + str(selected_item_tree_view["id"]) + 
-                          " index: " + str(selected_item_tree_view["index"]) + 
-                          " root: " + str(selected_item_tree_view["root"]))'''
-                    #print(selected_item_tree_view)
-                    #print("------------------")
-                    #print(elements_in_tree_view)
                     return
 
         def delete_item_recursive(id_item):

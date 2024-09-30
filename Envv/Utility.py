@@ -87,7 +87,6 @@ class Toolbox(tk.Frame):
         dict_complex = [d for d in data_copied if d['type'] == 'complex']
 
         if len(dict_complex) == 1:
-
             dizionario_diverso = dict_complex[0]
             for d in data_copied:
                 if d['id'] == dizionario_diverso['id']:
@@ -154,6 +153,46 @@ class Toolbox(tk.Frame):
         return ordered_list
     
 
+    def sort_and_structure2(data):
+
+        # Ordina la lista di dizionari in base all'indice
+        sorted_data = sorted(data, key=lambda x: int(x['index']))
+        
+        # Dizionario per trovare rapidamente un elemento per id
+        id_map = {item['id']: item for item in sorted_data}
+        
+        # Dizionario per mantenere la struttura gerarchica
+        hierarchy = {}
+
+        # Funzione ricorsiva per costruire la gerarchia e lista ordinata
+        def add_children(parent):
+            children = [item for item in sorted_data if item['root'] == parent['id']]
+            parent['children'] = children
+            for child in children:
+                add_children(child)
+        
+        # Trova gli elementi radice (quelli senza root)
+        roots = [item for item in sorted_data if item['root'] == '']
+
+        # Costruisce la gerarchia per ogni elemento radice
+        for root in roots:
+            add_children(root)
+            hierarchy[root['id']] = root
+        
+        # Funzione per creare la lista ordinata dalla struttura gerarchica
+        def build_ordered_list(node, ordered_list):
+            ordered_list.append(node)
+            for child in node.get('children', []):
+                build_ordered_list(child, ordered_list)
+            # Rimuovi il campo children per mantenere la struttura originale
+            node.pop('children', None)
+
+        ordered_list = []
+        for root in roots:
+            build_ordered_list(root, ordered_list)
+        
+        return ordered_list
+    
     # Crea plot
     def create_plot(master, movement):
         figure = Figure(figsize=(50, 50), dpi=75)
