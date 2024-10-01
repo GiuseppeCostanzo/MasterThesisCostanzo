@@ -210,7 +210,9 @@ class Toolbox(tk.Frame):
             lines.append(line)
 
         plot.set_xlabel('Time instant (ms)')
-        plot.set_ylabel('Values')
+        plot.set_ylabel('Servo Value')
+
+        plot.set_ylim(0, 100)
 
         # Function to update plot based on checkbox selection
         def update_plot():
@@ -237,3 +239,5 @@ class Toolbox(tk.Frame):
 
         canvas = FigureCanvasTkAgg(figure, master)
         canvas.get_tk_widget().pack(expand=True, fill="both")
+
+

@@ -419,6 +419,17 @@ def on_save_complex(itemsInput):
     save_movement(ris)
     return True
 
+# Return children of a complex movement (used in frame3)
+def return_children(root, elements):
+    # Trova i figli dell'elemento con l'id specificato
+    children_ids = [element['id'] for element in elements if element.get('root') == root]
+    
+    # Ricorsivamente trova gli ID dei figli di ciascun figlio
+    for child_id in children_ids:
+        children_ids.extend(return_children(child_id, elements))
+    
+    return children_ids
+
 
 # ------------------------------- GUI -----------------------------------------------------------------------------------------
 class GUI(tk.Tk):
@@ -1304,39 +1315,99 @@ class GUI(tk.Tk):
             button = tk.Button(input_window, text="Submit", width=10, command=lambda: on_click_specific(input_window,entry))
             button.pack(pady=10)
 
+        #flip linear movement
+        def flip_linear(item):
+            pos_start = item['values'][0][:-1]
+            pos_end = item['values'][1][:-1]
 
+            item['values'][0][:-1] = pos_end
+            item['values'][1][:-1] = pos_start
+
+            for mov in elements_in_tree_view:
+                if mov["id"] == item["id"]:
+                    mov = item.copy()
+                    break
+            return
+        
+        #flip sinusoidal movement
+        def flip_sinusoidal(item):
+            values = item['values']
+            for i, val in enumerate(values):
+                if i>= 2 and i<=7:
+                    new_value = 1 - float(val[2])
+                    val[2] = str(new_value) 
+            return   
+
+
+        def flip_complex(item):
+            ids = return_children(item['id'], elements_in_tree_view) #only leaves
+            #calculation min start e max end
+            min_start = 999999
+            max_end = -1
+            for submov in elements_in_tree_view:
+                if submov['id'] in ids:
+                    #smallest min_start 
+                    if submov['type'] == 'sinusoidal':
+                        var = int(submov['values'][0])
+                        if var <= min_start:
+                            min_start = var
+
+                    if submov['type'] == 'linear':
+                        var = int(submov['values'][0][-1])
+                        if var <= min_start:
+                            min_start = var         
+
+                    #biggest max_end
+                    if submov['type'] == 'sinusoidal':
+                        var = int(submov['values'][1])
+                        if var >= max_end:
+                            max_end = var
+
+                    if submov['type'] == 'linear':
+                        var = int(submov['values'][1][-1])
+                        if var >= max_end:
+                            max_end = var    
+
+            t_center = min_start + ((max_end-min_start)/2)
+
+            for submov in elements_in_tree_view:
+                if submov['id'] in ids:
+                    if submov['type'] == 'sinusoidal':
+                        new_end = (2*t_center)-int(submov['values'][0])
+                        new_start = t_center + (t_center - int(submov['values'][1]))
+                        submov['values'][0] = str(int(new_start))
+                        submov['values'][1] = str(int(new_end))
+                        flip_sinusoidal(submov)
+      
+                    if submov['type'] == 'linear':
+                        new_end = (2*t_center)-int(submov['values'][0][6])
+                        new_start = t_center + (t_center - int(submov['values'][1][6]))
+                        submov['values'][0][6] = str(int(new_start))
+                        submov['values'][1][6] = str(int(new_end))
+                        flip_linear(submov)
             
         #inverte i valori del movimento
-        def flip():
-            if selected_item_tree_view is None:
+        def flip(selected_item):
+            if selected_item is None:
                 messagebox.showerror("Error", "Select a movement")
                 return
             
-            if selected_item_tree_view['type'] == "linear":
-                pos_start = selected_item_tree_view['values'][0][:-1]
-                pos_end = selected_item_tree_view['values'][1][:-1]
-
-                selected_item_tree_view['values'][0][:-1] = pos_end
-                selected_item_tree_view['values'][1][:-1] = pos_start
-
-                for mov in elements_in_tree_view:
-                    if mov["id"] == selected_item_tree_view["id"]:
-                        mov = selected_item_tree_view.copy()
-                        break
+            if selected_item['type'] == "linear":
+                flip_linear(selected_item)
                 messagebox.showinfo("Info", "Updated movement")
                 return
             
-            if selected_item_tree_view['type'] == "sinusoidal":
-                values = selected_item_tree_view['values']
-                for i, val in enumerate(values):
-                    if i>= 2 and i<=7:
-                        new_value = 1 - float(val[2])
-                        val[2] = str(new_value)       
+            if selected_item['type'] == "sinusoidal":
+                flip_sinusoidal(selected_item)     
                 messagebox.showinfo("Info", "Updated movement")
                 return
+            
             if selected_item_tree_view['type'] == "complex":
-                print("complex")
-            
+                flip_complex(selected_item)
+                messagebox.showinfo("Info", "Updated movement")
+                return
+
+
             
         #update the indexes (levels) of the elements in treeview (called on import json or click "up" or "down", "delete_item" e "import_json")
         def update_index():
@@ -1521,6 +1592,7 @@ class GUI(tk.Tk):
 
             return result
 
+        # Visualize a selected movement in frame3
         def vis_mov(gui_instance,movement):
             if movement is None:
                 messagebox.showerror("Error", "Select or import a movement correctly")
@@ -1532,6 +1604,16 @@ class GUI(tk.Tk):
             else:
                 visualize_movement(gui_instance, selected_item_tree_view)
             return
+        
+
+        def visualize_final_movement(gui_instance,movements):
+            if not movements:
+                messagebox.showerror("Error", "Import at least one movement")
+                return 
+            visualize_movement(gui_instance,movements)
+            return
+
+
 
         # Aggiungere Menubuttons al frame
         file_button = ttk.Menubutton(self.frame3, text="Edit")
@@ -1549,7 +1631,7 @@ class GUI(tk.Tk):
         modify_menu.add_command(label="Specific",command=lambda: scale_specific())
         file_menu.add_cascade(label="Scale", menu=modify_menu)
         
-        file_menu.add_command(label="Flip", command=lambda: flip())
+        file_menu.add_command(label="Flip", command=lambda: flip(selected_item_tree_view))
         
         tree.bind("<<TreeviewSelect>>", on_tree_select)
         
@@ -1576,6 +1658,14 @@ class GUI(tk.Tk):
         
         button_save = tk.Button(self.frame3, text="Save",command=lambda: on_save_complex(elements_in_tree_view))
         button_save.grid(row=8,column=0)
+
+        button_vis_fin = tk.Button(self.frame3, text="Visualize final movement", 
+                                   command=lambda: visualize_final_movement(self.frame3,elements_in_tree_view))
+        button_vis_fin.grid(row=9,column=0)
+
+
+
+
         
         
 
