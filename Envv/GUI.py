@@ -795,6 +795,8 @@ class GUI(tk.Tk):
                 # entry - init position
                 thumb_big_init = tk.Entry(new_window, fg='black',validate="key",)
                 a = selected_item_tree_view["values"][0][0]
+                if a == "NaN":
+                    a = ''
                 thumb_big_init.insert(0, a)
                 thumb_big_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 thumb_big_init.configure(justify=tk.CENTER) 
@@ -803,6 +805,8 @@ class GUI(tk.Tk):
                 # entry - end position
                 thumb_big_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][0]
+                if a == "NaN":
+                    a = ''                
                 thumb_big_end.insert(0, a)
                 thumb_big_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 thumb_big_end.configure(justify=tk.CENTER) 
@@ -816,6 +820,8 @@ class GUI(tk.Tk):
                 # entry - init position
                 thumb_little_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][1]
+                if a == "NaN":
+                    a = ''                
                 thumb_little_init.insert(0, a)
                 thumb_little_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 
@@ -825,6 +831,8 @@ class GUI(tk.Tk):
                 # entry - end position
                 thumb_little_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][1]
+                if a == "NaN":
+                    a = ''                
                 thumb_little_end.insert(0, a)
                 thumb_little_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 thumb_little_end.configure(justify=tk.CENTER) 
@@ -840,6 +848,8 @@ class GUI(tk.Tk):
                 # entry - init position
                 index_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][2]
+                if a == "NaN":
+                    a = ''                
                 index_init.insert(0, a)
                 index_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 index_init.configure(justify=tk.CENTER) 
@@ -848,6 +858,8 @@ class GUI(tk.Tk):
                 # entry - end position
                 index_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][2]
+                if a == "NaN":
+                    a = ''                
                 index_end.insert(0, a)
                 index_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 index_end.configure(justify=tk.CENTER) 
@@ -861,6 +873,8 @@ class GUI(tk.Tk):
                 # entry - init position
                 middle_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][3]
+                if a == "NaN":
+                    a = ''                
                 middle_init.insert(0, a)
                 middle_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 middle_init.configure(justify=tk.CENTER) 
@@ -869,6 +883,8 @@ class GUI(tk.Tk):
                 # entry - end position
                 middle_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][3]
+                if a == "NaN":
+                    a = ''                
                 middle_end.insert(0, a)
                 middle_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 middle_end.configure(justify=tk.CENTER) 
@@ -882,6 +898,8 @@ class GUI(tk.Tk):
                 # entry - init position
                 ring_pinky_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][4]
+                if a == "NaN":
+                    a = ''                
                 ring_pinky_init.insert(0, a)
                 ring_pinky_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 ring_pinky_init.configure(justify=tk.CENTER) 
@@ -890,6 +908,8 @@ class GUI(tk.Tk):
                 # entry - end position
                 ring_pinky_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][4]
+                if a == "NaN":
+                    a = ''                
                 ring_pinky_end.insert(0, a)
                 ring_pinky_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 ring_pinky_end.configure(justify=tk.CENTER) 
@@ -902,6 +922,8 @@ class GUI(tk.Tk):
                 # entry - init position
                 forearm_init = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][0][5]
+                if a == "NaN":
+                    a = ''                
                 forearm_init.insert(0, a)
                 forearm_init.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 forearm_init.configure(justify=tk.CENTER) 
@@ -910,6 +932,8 @@ class GUI(tk.Tk):
                 # entry - end position
                 forearm_end = tk.Entry(new_window, fg='black',validate="key")
                 a = selected_item_tree_view["values"][1][5]
+                if a == "NaN":
+                    a = ''                
                 forearm_end.insert(0, a)
                 forearm_end.config(validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
                 forearm_end.configure(justify=tk.CENTER) 
@@ -955,7 +979,7 @@ class GUI(tk.Tk):
                 deltaT.configure(justify=tk.CENTER) 
                 deltaT.grid(row=10,column=1,padx=5)
 
-                #array dei valori di partenza
+                # Array dei valori di partenza
                 init_list = [thumb_big_init,thumb_little_init,index_init,middle_init,
                              ring_pinky_init,forearm_init]
 
@@ -1087,6 +1111,8 @@ class GUI(tk.Tk):
                         #entry = None
                         entry = tk.Entry(new_window, width=15, validate="key")
                         a = selected_item_tree_view["values"][i][j-1] #accesso
+                        if a == "NaN":
+                            a = ''                        
                         entry.insert(0,a)
                         if j==3:
                             entry.config(validatecommand=(validate_amp, "%P"))
@@ -1215,11 +1241,9 @@ class GUI(tk.Tk):
             
             def scale_complex(value,root):
                 for mov in elements_in_tree_view:
-                    print(mov["id"])
                     if mov['root'] == root:
 
                         if mov["type"] == "linear":
-                            print("trovato movimento lineare")
                             #update the selected movement
                             old_val_init = float(mov["values"][0][6])
                             mov["values"][0][6] = int(old_val_init*value)
@@ -1229,7 +1253,6 @@ class GUI(tk.Tk):
                      
                         if mov["type"] == "sinusoidal":
                             #update the selected movement
-                            print("trovato movimento sinusoidale")
                             old_val_init = float(mov["values"][0])
                             mov["values"][0] = int(old_val_init*value)
 
@@ -1237,7 +1260,6 @@ class GUI(tk.Tk):
                             mov["values"][1] = int(old_val_end*value)
 
                         if mov["type"] == "complex":
-                            print("trovato movimento complesso")
                             scale_complex(value,mov["id"])
                             
                            
