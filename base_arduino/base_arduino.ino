@@ -1,6 +1,5 @@
 #include <Servo.h>
 
-int x; 
 Servo thumb_big;
 Servo thumb_little;
 Servo index_finger;
@@ -44,19 +43,6 @@ void loop() {
       middle_finger.write(receivedData[3]);
       ring_pinky.write(receivedData[4]);
       forearm.write(receivedData[5]);
-      // For debug
-      /*Serial.print(receivedData[0]);
-      Serial.print("-");
-      Serial.print(receivedData[1]);
-      Serial.print("-");
-      Serial.print(receivedData[2]);
-      Serial.print("-");
-      Serial.print(receivedData[3]);
-      Serial.print("-");
-      Serial.print(receivedData[4]);
-      Serial.print("-");
-      Serial.print(receivedData[5]);
-      Serial.println();*/
       done = true;
     }
   }
@@ -66,7 +52,7 @@ void loop() {
     done = false;
     for(int a=0; a<6; a++){
       receivedData[a] = Serial.read(); 
-      delay(10); //necessario
+      delay(10);
     }
   } 
 
