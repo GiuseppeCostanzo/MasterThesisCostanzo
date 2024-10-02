@@ -101,11 +101,12 @@ class LinearMovement(Movement):
             result = result.astype(np.int64)
             return result, exists_cut_values
         else:
+
             num_rows = len(discrete_times_external)
             num_cols = 7
             large_matrix = np.full((num_rows, num_cols), np.nan)
             start_time = result[0, -1]  # ritorna il primo istante di tempo nella matrice piccola
-            start_index = round((start_time - self.startTimePassed) / self.deltaT)
+            start_index = int((start_time - self.startTimePassed) / self.deltaT)
             large_matrix[start_index:start_index + result.shape[0], :] = result
             large_matrix[:, -1] = discrete_times_external
             return large_matrix, exists_cut_values
@@ -169,24 +170,15 @@ class SinusoidalMovement(Movement):
             self.flag = True      
         else:
             raise TypeError("All arguments must be null or all non-null")
-        
-        # Converte gli istanti di tempo da millisecondi a secondi per il calcolo
-        #self.startTime = self.startTime / 1000
-        #self.endTime = self.endTime / 1000
 
         # Genera un array di tempi da startTime a end_time con intervalli di deltaT(periodo di campionamento)
         t = np.arange(self.startTime, self.endTime+self.deltaT, self.deltaT)
-        #t_millis = t*1000 #per l'output si usano i millisecondi
-        #print(t_millis)
 
         t_external = None
         #t_millis_external = None
         if self.flag is True:
-            #self.startTimePassed = self.startTimePassed / 1000
-            #self.endTimePassed = self.endTimePassed / 1000
 
             t_external = np.arange(self.startTimePassed, self.endTimePassed+self.deltaT, self.deltaT)
-            #t_millis_external = t_external*1000 #per l'output si usano i millisecondi
 
         #first element
         column1 = self.amplitude[5] * np.sin(2 * np.pi * self.frequency[5] * (t/1000) + (self.phase[5]*np.pi)) + self.y_init[5]
@@ -273,7 +265,6 @@ class ComplexMovement(Movement):
                     if var >= t_end:
                         t_end = var  
             
-
             discrete_times_external = np.arange(t_start, t_end+deltaT, deltaT)
             result =  np.full((len(discrete_times_external), 7), np.nan)
             result[:, -1] = discrete_times_external #metto gli istanti di tempo esterni

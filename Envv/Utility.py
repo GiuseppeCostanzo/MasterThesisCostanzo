@@ -109,10 +109,9 @@ class Toolbox(tk.Frame):
                             d['root'] = ''
                             break
             else:
-                print("Error in sort_and_Structure 1")
                 root_comune = None
         else:
-            print("Error in sort_and_structure 2")
+            pass
 
         # Ordina la lista di dizionari in base all'indice
         sorted_data = sorted(data_copied, key=lambda x: int(x['index']))

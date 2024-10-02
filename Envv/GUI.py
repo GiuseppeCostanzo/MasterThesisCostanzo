@@ -221,12 +221,25 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
 
         
 # funzione per eseguire un movimento base salvato **************************************************************
-def execute_movement(item):
-    print("Modifica esegui il movimento (execute_movement)")
-    #movement, flag = discretize(item)
-    '''if movement is None:
-        messagebox.showerror("Error", "Select or import a movement")
-        return 
+def execute_movement(movement):
+
+    if movement is None:
+        messagebox.showerror("Error", "Select or import a movement correctly")
+        return
+
+
+    result = None
+    if isinstance(movement, dict):
+        if movement['type'] == 'linear':
+            d = LinearMovement(item=movement)
+            result, flag = d.discretize()
+        
+        if movement['type'] == 'sinusoidal':
+            d = SinusoidalMovement(item=movement)
+            result, flag = d.discretize()
+    else:
+        d = ComplexMovement(item=movement)
+        result, flag = d.discretize()
     
     if flag is True:
         messagebox.showinfo("Info", "There are values ​​that exceed the range 0-100. A cut has been made")
@@ -252,7 +265,7 @@ def execute_movement(item):
         fingers_data_mapped = Toolbox.mapping(movement[packet][0],movement[packet][1],movement[packet][2],movement[packet][3],movement[packet][4],movement[packet][5])
         
         global arduino
-        arduino.write(bytearray(fingers_data_mapped)) '''      
+        arduino.write(bytearray(fingers_data_mapped))       
         
           
 #funzione per visualizzare un movimento in frame3*************************************************************
@@ -414,7 +427,7 @@ def on_save_complex(itemsInput):
     
     items_copy = copy.deepcopy(items)
     items_copy = Toolbox.sort_and_structure2(items_copy)
-    ris = recursive_save(data, items, '')
+    ris = recursive_save(data, items_copy, '')
     id_visited = []
     save_movement(ris)
     return True
@@ -696,7 +709,7 @@ class GUI(tk.Tk):
         time_end.grid(row=9,column=2)
         
         # *********** DELTA T ***************************
-        label8 = tk.Label(self.frame2, text="DeltaT (default 70ms)")
+        label8 = tk.Label(self.frame2, text="DeltaT(ms) - default 70ms")
         label8.grid(row=10,column=0,sticky='e',pady=10)
         
         # entry - init time
@@ -1354,9 +1367,13 @@ class GUI(tk.Tk):
         #flip sinusoidal movement
         def flip_sinusoidal(item):
             values = item['values']
+            t_end = float(values[1])
+            t_start = float(values[0])
             for i, val in enumerate(values):
-                if i>= 2 and i<=7:
-                    new_value = 1 - float(val[2])
+                if i>=2 and i<=7 and (val[1] != "NaN"):
+                    a = (t_end - t_start)*int(val[1])
+                    dec = a - int(a)
+                    new_value = 1 - float(float(val[2])+ dec)
                     val[2] = str(new_value) 
             return   
 
@@ -1759,7 +1776,7 @@ class GUI(tk.Tk):
             
         
         
-        deltaT_label = tk.Label(self.frame4, text="deltaT (ms)")
+        deltaT_label = tk.Label(self.frame4, text="DeltaT(ms) - default 70ms")
         deltaT_label.grid(row=10, column=1,pady=10,sticky="s")
         
         startTime_label = tk.Label(self.frame4, text="Start time(ms)")
