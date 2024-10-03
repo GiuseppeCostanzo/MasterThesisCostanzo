@@ -143,7 +143,7 @@ class SinusoidalMovement(Movement):
             if self.values[i][1] == 'NaN':
                 temp.append(np.nan)
             else:
-                temp.append(int(self.values[i][1]))
+                temp.append(float(self.values[i][1]))
         a = np.array(temp)
         self.frequency = a/1000 #Converting from sampling period to sampling rate
         

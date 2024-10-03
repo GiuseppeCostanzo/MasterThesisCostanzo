@@ -402,7 +402,6 @@ def on_save_complex(itemsInput):
                     })
                     level += 1
                     id_visited.append(element["id"])
-                    print("Visitato",element["id"]) 
 
                 elif element["type"] == "sinusoidal":
                     data["values"].append({
@@ -411,7 +410,6 @@ def on_save_complex(itemsInput):
                     })
                     level += 1
                     id_visited.append(element["id"])
-                    print("Visitato",element["id"]) 
 
                 elif element["type"] == "complex":
                     id_father = element["id"]  
@@ -420,7 +418,6 @@ def on_save_complex(itemsInput):
                     data["values"].append(res)
                     level += 1
                     id_visited.append(element["id"])
-                    print("Visitato tutto elemento ricorsivo",element["id"]) 
                 else:
                     print("Error in recursive_save")
         return data
@@ -1251,31 +1248,52 @@ class GUI(tk.Tk):
         # function for scaling of a movement of 1.5x, 2x or 0.5x
         # value is a float
         def scale(value):
-            
-            def scale_complex(value,root):
+
+            def scale_linear(value,id_element):
+                element_to_work = None
+                for e in elements_in_tree_view:
+                    if e['id'] == id_element:
+                        element_to_work = e
+                        break
+                #update the selected movement
+                init = int(element_to_work["values"][0][6])
+                end = int(element_to_work["values"][1][6])
+                new_end = (end - init)*value
+                #subst. in the new end
+                element_to_work["values"][1][6] = init + int(new_end)  
+
+                #update the ram
                 for mov in elements_in_tree_view:
-                    if mov['root'] == root:
+                    if mov["id"] == element_to_work["id"]:
+                        mov = element_to_work.copy()
+                        break                              
+                return
+            
+            def scale_sinusoidal(value,id_element):
+                element_to_work = None
+                for e in elements_in_tree_view:
+                    if e['id'] == id_element:
+                        element_to_work = e
+                        break
+                #update the selected movement
+                init = int(element_to_work["values"][0])
+                end = int(element_to_work["values"][1])
+                new_end = (end - init)*value
+                #subst. in the new end
+                element_to_work["values"][1] = init + int(new_end)
+                
+                #modify the frequency
+                for i,val in enumerate(element_to_work["values"]):
+                    if i>=2 and i<=7:
+                        val[1] = str(float(val[1])/value)
 
-                        if mov["type"] == "linear":
-                            #update the selected movement
-                            old_val_init = float(mov["values"][0][6])
-                            mov["values"][0][6] = int(old_val_init*value)
-
-                            old_val_end = float(mov["values"][1][6])
-                            mov["values"][1][6] = int(old_val_end*value)
-                     
-                        if mov["type"] == "sinusoidal":
-                            #update the selected movement
-                            old_val_init = float(mov["values"][0])
-                            mov["values"][0] = int(old_val_init*value)
-
-                            old_val_end = float(mov["values"][1])
-                            mov["values"][1] = int(old_val_end*value)
-
-                        if mov["type"] == "complex":
-                            scale_complex(value,mov["id"])
-                            
-                           
+                #update the ram
+                for mov in elements_in_tree_view:
+                    if mov["id"] == element_to_work["id"]:
+                        mov = element_to_work.copy()
+                        break
+                return
+                                                  
             if selected_item_tree_view is None:
                 messagebox.showerror("Error", "Select a movement")
                 return
@@ -1284,40 +1302,56 @@ class GUI(tk.Tk):
             type = selected_item_tree_view["type"]
 
             if type == "linear":
-                #update the selected movement
-                old_val_init = float(selected_item_tree_view["values"][0][6])
-                selected_item_tree_view["values"][0][6] = int(old_val_init*value)
-
-                old_val_end = float(selected_item_tree_view["values"][1][6])
-                selected_item_tree_view["values"][1][6] = int(old_val_end*value)
-
-                #update the ram
-                for mov in elements_in_tree_view:
-                    if mov["id"] == selected_item_tree_view["id"]:
-                        mov = selected_item_tree_view.copy()
-                        break
+                scale_linear(value,selected_item_tree_view['id'])
                 messagebox.showinfo("Info", "Updated movement")
                 return
             
             if type == "sinusoidal":
-                #update the selected movement
-                old_val_init = float(selected_item_tree_view["values"][0])
-                selected_item_tree_view["values"][0] = int(old_val_init*value)
-
-                old_val_end = float(selected_item_tree_view["values"][1])
-                selected_item_tree_view["values"][1] = int(old_val_end*value)
-
-                #update the ram
-                for mov in elements_in_tree_view:
-                    if mov["id"] == selected_item_tree_view["id"]:
-                        mov = selected_item_tree_view.copy()
-                        break
+                scale_sinusoidal(value,selected_item_tree_view['id'])
                 messagebox.showinfo("Info", "Updated movement")
                 return
 
             if type == "complex":
-                scale_complex(value,selected_item_tree_view["id"])
-                #print(elements_in_tree_view)
+                #scale_complex(value,selected_item_tree_view["id"])
+                ids = return_children(selected_item_tree_view["id"], elements_in_tree_view) #only leaves
+                #calculation min start e max end
+                min_start = 999999
+                for submov in elements_in_tree_view:
+                    if submov['id'] in ids:
+                        #smallest min_start 
+                        if submov['type'] == 'sinusoidal':
+                            var = int(submov['values'][0])
+                            if var <= min_start:
+                                min_start = var
+
+                        if submov['type'] == 'linear':
+                            var = int(submov['values'][0][-1])
+                            if var <= min_start:
+                                min_start = var  
+
+                for submov in elements_in_tree_view:
+                    if submov['id'] in ids:
+                        if submov['type'] == 'sinusoidal':
+                            end = int(submov['values'][1])
+                            start = int(submov['values'][0])
+                            range = end - start
+                            new_start = min_start + (start - min_start)*value
+                            new_end = new_start + range
+
+                            submov['values'][1] = str(int(new_end))
+                            submov['values'][0] = str(int(new_start))
+                            scale_sinusoidal(value,submov['id'])
+
+                        if submov['type'] == 'linear':   
+                            end = int(submov['values'][1][6])
+                            start = int(submov['values'][0][6])
+                            range = end - start
+                            new_start = min_start + (start - min_start)*value
+                            new_end = new_start + range
+                            submov['values'][1][6] = str(int(new_end))
+                            submov['values'][0][6] = str(int(new_start))    
+                            scale_linear(value,submov['id'])                           
+
                 messagebox.showinfo("Info", "Updated complex movement")
                 return
 
@@ -1371,10 +1405,17 @@ class GUI(tk.Tk):
             t_start = float(values[0])
             for i, val in enumerate(values):
                 if i>=2 and i<=7 and (val[1] != "NaN"):
-                    a = (t_end - t_start)*int(val[1])
-                    dec = a - int(a)
-                    new_value = 1 - float(float(val[2])+ dec)
-                    val[2] = str(new_value) 
+                    #durata*frequenza
+                    num_per = (t_end - t_start)*int(val[1])
+                    #print("Periodi",num_per)
+                    dec = 2*(num_per - int(num_per))
+                    #1 - old+dec
+                    new_value = -2 + float(float(val[2])+ dec)/2
+                    #print("nuovo_val1", new_value)
+                    #new_value = 1 - new_value
+
+                    #print("nuovo_val2", new_value)
+                    val[2] = str(new_value)
             return   
 
 
@@ -1733,10 +1774,10 @@ class GUI(tk.Tk):
         frequency_label = tk.Label(self.frame4, text="Frequency(mHz)")
         frequency_label.grid(row=1, column=2)
         
-        phase_label = tk.Label(self.frame4, text="Amp. Shift(-1,1)")
+        phase_label = tk.Label(self.frame4, text="Phase(-1,1)")
         phase_label.grid(row=1, column=3)
         
-        y_init_label = tk.Label(self.frame4, text="Start value(0-100)")
+        y_init_label = tk.Label(self.frame4, text="Offset y(0-100)")
         y_init_label.grid(row=1, column=4)
         
         # Label a sinistra della griglia per ogni riga
