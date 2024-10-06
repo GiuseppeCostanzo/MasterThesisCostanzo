@@ -1312,7 +1312,6 @@ class GUI(tk.Tk):
                 return
 
             if type == "complex":
-                #scale_complex(value,selected_item_tree_view["id"])
                 ids = return_children(selected_item_tree_view["id"], elements_in_tree_view) #only leaves
                 #calculation min start e max end
                 min_start = 999999
@@ -1408,7 +1407,7 @@ class GUI(tk.Tk):
             for i, val in enumerate(values):
                 if i>=2 and i<=7 and (val[1] != "NaN"):
 
-                    frequency = int(val[1])
+                    frequency = float(val[1])
                     oldphase = float(val[2])
                     new_phase = 1 - (((t_end - t_start)*frequency-int((t_end - t_start)*frequency))*2+oldphase)
 

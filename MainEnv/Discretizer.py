@@ -19,8 +19,7 @@ class LinearMovement(Movement):
         super().__init__(startTime, endTime)
 
         if item is None:
-            raise TypeError("The 'item' parameter cannot be None")
-        
+            raise TypeError("The 'item' parameter cannot be None")   
         self.item = item
         self.values = item["values"] # values of the item (movement)
         self.flag = False
@@ -42,37 +41,29 @@ class LinearMovement(Movement):
                 self.toPos.append(int(self.values[1][i]))
 
     def discretize(self):
-        # Some check
         if all(var is None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):      
-            self.deltaT = int(self.values[2]) #take the deltaT from item (json)
-       
+            self.deltaT = int(self.values[2]) #take the deltaT from item (json)   
         elif all(var is not None for var in [self.startTimePassed, self.endTimePassed, self.deltaT]):
             self.flag = True
         else:
             raise TypeError("All arguments must be null or all non-null")
 
-        # Discretize
-        # Genera un array di tempi da startTime a end_time con intervalli di deltaT(periodo di campionamento)
+        # Generates an array of times from startTime to end_time with deltaT intervals (sampling period)
         discrete_times = np.arange(self.startTime, self.endTime+self.deltaT, self.deltaT)
-
-        #L_external = None
         discrete_times_external = None
         if self.flag is True:
             discrete_times_external = np.arange(self.startTimePassed, self.endTimePassed+self.deltaT, self.deltaT)
-
-        discrete_positions = None
-        # Restituisce numeri equidistanti in un intervallo specificato L 
+        discrete_positions = None 
         if np.isnan(self.fromPos[5]) and np.isnan(self.toPos[5]):
             discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], len(discrete_times)))
         elif not np.isnan(self.fromPos[5]) and not np.isnan(self.toPos[5]):
             discrete_positions = (np.linspace(self.fromPos[5], self.toPos[5], len(discrete_times))).astype(np.int64)
         else:
             raise ValueError("Error in LinearDiscretize. fromPos and toPos must both be nan or both not NaN")
-
-        # Impila gli array
+        # Stack arrays
         discretized_matrix = np.vstack((discrete_positions, discrete_times))
 
-        # Il for è al contrario, va dall'ultimo elemento al primo per mantenere l'ordine stabilito del sistema
+        # The for is in reverse, it goes from the last element to the first to maintain the established order
         for i in range(4,-1,-1):
             new_positions = None
             if np.isnan(self.fromPos[i]) and np.isnan(self.toPos[i]):
@@ -80,14 +71,12 @@ class LinearMovement(Movement):
             elif not np.isnan(self.fromPos[i]) and not np.isnan(self.toPos[i]):
                 new_positions = (np.linspace(self.fromPos[i], self.toPos[i], len(discrete_times))).astype(np.int64)
             else:
-                raise ValueError("Error in LinearDiscretize. fromPos and toPos must both be nan or both not NaN")
-            
-            # Impila gli array
+                raise ValueError("Error in LinearDiscretize. fromPos and toPos must both be nan or both not NaN")          
+            # Stack arrays
             discretized_matrix = np.vstack((new_positions,discretized_matrix))
-
         result = discretized_matrix.T
 
-        # exists_cut_values boolean for the warning in the gui
+        # exists_cut_values is a boolean flag for the warning in the gui
         exists_cut_values = False
         exists_cut_values = any((val > 100 or val < 0) for row in result for val in row[:-1])
         # clip values >100 and <0
@@ -95,17 +84,16 @@ class LinearMovement(Movement):
             result[:, :-1] = np.clip(result[:, :-1], 0, 100)
 
         if self.flag is False:
-            # Sostituzione dei NaN con 50 se la funzione è stata direttamente chiamata dalla GUI (e quindi non siamo in un 
-            # contesto di una movimento complesso più esterno)
+            # Replacing NaN with 50 if the function was directly called from the GUI (and thus we are not in a 
+            # context of a more external complex movement)
             result = np.nan_to_num(result, nan=50)
             result = result.astype(np.int64)
             return result, exists_cut_values
         else:
-
             num_rows = len(discrete_times_external)
             num_cols = 7
             large_matrix = np.full((num_rows, num_cols), np.nan)
-            start_time = result[0, -1]  # ritorna il primo istante di tempo nella matrice piccola
+            start_time = result[0, -1]  # returns the first instant of time in the small matrix
             start_index = int((start_time - self.startTimePassed) / self.deltaT)
             large_matrix[start_index:start_index + result.shape[0], :] = result
             large_matrix[:, -1] = discrete_times_external
