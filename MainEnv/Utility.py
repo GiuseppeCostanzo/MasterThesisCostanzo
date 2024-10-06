@@ -47,22 +47,11 @@ class Toolbox(tk.Frame):
         #Load the contents of the JSON file into a Python dictionary
             data = json.load(json_file)
         
-        #thumb - big servo
         thumb_big = data["thumb_big"]
-        
-        #thumb - little servo
         thumb_little = data["thumb_little"]
-        
-        #index_finger servo
         index_finger = data["index_finger"]
-
-        #middle_finger servo
         middle_finger = data["middle_finger"]
-    
-        #ring_finger servo
         ring_pinky = data["ring_pinky"]
-    
-        #forearm servo
         forearm = data["forearm"]
 
         #All inputs

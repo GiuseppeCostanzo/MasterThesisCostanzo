@@ -1398,6 +1398,8 @@ class GUI(tk.Tk):
                     break
             return
         
+
+        #Newphase=1-{ [(end_time-start_time)*freq-int((end_time-start_time)*freq)] *2+oldphase}
         #flip sinusoidal movement
         def flip_sinusoidal(item):
             values = item['values']
@@ -1405,17 +1407,16 @@ class GUI(tk.Tk):
             t_start = float(values[0])
             for i, val in enumerate(values):
                 if i>=2 and i<=7 and (val[1] != "NaN"):
-                    #durata*frequenza
-                    num_per = (t_end - t_start)*int(val[1])
-                    #print("Periodi",num_per)
-                    dec = 2*(num_per - int(num_per))
-                    #1 - old+dec
-                    new_value = -2 + float(float(val[2])+ dec)/2
-                    #print("nuovo_val1", new_value)
-                    #new_value = 1 - new_value
 
-                    #print("nuovo_val2", new_value)
-                    val[2] = str(new_value)
+                    frequency = int(val[1])
+                    oldphase = float(val[2])
+                    new_phase = 1 - (((t_end - t_start)*frequency-int((t_end - t_start)*frequency))*2+oldphase)
+
+                    if new_phase < -1:
+                        new_phase = new_phase +2
+                    if new_phase > 1:
+                        new_phase = new_phase -2
+                    val[2] = str(new_phase)
             return   
 
 
@@ -1562,8 +1563,7 @@ class GUI(tk.Tk):
                 recursive_reading(None, tree_view)
                 update_index() #updating indexes
             else:
-                return     
-            #print(elements_in_tree_view)   
+                return        
         
         # move a selected element of the treeview up
         def move_up():
@@ -1598,7 +1598,6 @@ class GUI(tk.Tk):
             
             nonlocal id_item
             id_item = tree.selection()[0] #id dell'item selezionato
-            print(id_item)
             #elements_in_tree_view è una list di dizionari
             for element in elements_in_tree_view:
                 if id_item == element["id"]:
@@ -1633,17 +1632,25 @@ class GUI(tk.Tk):
         def delete_item(idItem):
             if idItem is None:
                 messagebox.showerror("Error", "Select a movement to delete")
-                return         
+                return
+
+            nonlocal selected_item_tree_view
+            father_id = None
+            if selected_item_tree_view['root'] != '' :
+                children = return_children(selected_item_tree_view['root'],elements_in_tree_view)
+                if len(children) == 1:
+                    father_id = selected_item_tree_view['root']
+       
             tree.delete(idItem) #delete the element from the treeview
             delete_item_recursive(idItem)
+            if father_id is not None:
+                delete_item(father_id)
             update_index()
-            nonlocal selected_item_tree_view
             selected_item_tree_view = None
             nonlocal id_item
             id_item = None
             return
-
-        
+    
         #empty elements_in_tree_view(ram) and tree_view 
         def clear_all():
             nonlocal id_item
@@ -1652,10 +1659,7 @@ class GUI(tk.Tk):
             id_item = None
             tree.delete(*tree.get_children()) #empty the treeview
             elements_in_tree_view.clear() #empty the RAM
-            #print(elements_in_tree_view)
             
-
-
         def find_elements(elements, target_id):
             # Trova il dizionario con l'id specificato
             target_dict = next((elem for elem in elements if elem['id'] == target_id), None)
