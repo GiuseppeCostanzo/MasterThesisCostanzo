@@ -27,6 +27,6 @@ config = {
     }
 }
 # Opening file in write mode
-with open("config.json", "w") as json_file:
+with open("MainEnv/config.json", "w") as json_file:
     # Write data in json file
     json.dump(config, json_file)

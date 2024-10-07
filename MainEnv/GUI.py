@@ -20,19 +20,13 @@ from Utility import Toolbox
 import copy
 
 # Global parameters, eventually to be set
-usbport = 'COM7' # Usb port where arduino is connected 
+usbport = 'COM5' # Usb port where arduino is connected 
 arduino = None # Arduino communication instance
 baud = 38400 # Baud - speed parameter for arduino comm. (MUST BE the same value in the arduino sketch)
 
 # Internal usage
 start_time = None # used to calculate the time start of the button
 tree_view = [] #for visualizing the imported json in complex movement frame3
-
-
-
-# FUNZIONE PER SALVARE UN MOVIMENTO
-# Struttura di salvataggio: thumb_big, thumb_little, index, middle, ringPinky, forearm, time
-# Movement deve essere una list di list (matrice)
 
 def save_movement(data):
     
@@ -135,6 +129,33 @@ def validate_float_input(text):
     except ValueError:
         return False
 
+#create the tooltip info
+def create_tooltip(widget, text):
+    tooltip_window = None
+
+    def show_tooltip(event):
+        nonlocal tooltip_window
+        if tooltip_window is not None:
+            return
+        x, y, _, _ = widget.bbox("insert")
+        x += widget.winfo_rootx() + 25
+        y += widget.winfo_rooty() + 25
+        tooltip_window = tk.Toplevel(widget)
+        tooltip_window.wm_overrideredirect(True)
+        tooltip_window.wm_geometry(f"+{x}+{y}")
+        label = tk.Label(tooltip_window, text=text, background="white", borderwidth=1, relief="solid")
+        label.pack()
+
+    def hide_tooltip(event):
+        nonlocal tooltip_window
+        if tooltip_window is not None:
+            tooltip_window.destroy()
+            tooltip_window = None
+
+    widget.bind("<Enter>", show_tooltip)
+    widget.bind("<Leave>", hide_tooltip)
+
+
 # Funzione per il pulsante esegui movimento nel FRAME1 della GUI
 def on_submit(gui_instance):
     packet = []
@@ -153,7 +174,8 @@ def on_submit(gui_instance):
         return
     # Comunicazione ad arduino dei valori
     # Mapping: thumb big - thumb little - index - middle - ring&pinky - forearm
-    fingers_data_mapped = Toolbox.mapping(packet[0],packet[1],packet[2],packet[3],packet[4],packet[5])
+    tool = Toolbox()
+    fingers_data_mapped = tool.mapping(packet[0],packet[1],packet[2],packet[3],packet[4],packet[5])
     # Send values to arduino
     global arduino
     arduino.write(bytearray(fingers_data_mapped))
@@ -206,41 +228,30 @@ def on_save_linear(gui_instance,init_list,end_list,time_init,time_end,deltaT):
     else:
         dT = deltaT.get()
     
-
     #salvataggio nel json
     data = {
         "type": "linear",
         "values": [init_list_unpacked,end_list_unpacked,dT]
     }
     save_movement(data)
-     
         
-# Call the discretize in Discretizer.py
-#def discretize(item):
-#    return PreDiscr.pre_discretize(item)
-
-        
-# funzione per eseguire un movimento base salvato **************************************************************
-def execute_movement(movement):
-
-    if movement is None:
-        messagebox.showerror("Error", "Select or import a movement correctly")
-        return
-
-
-    result = None
-    if isinstance(movement, dict):
-        if movement['type'] == 'linear':
-            d = LinearMovement(item=movement)
-            result, flag = d.discretize()
-        
-        if movement['type'] == 'sinusoidal':
-            d = SinusoidalMovement(item=movement)
-            result, flag = d.discretize()
-    else:
-        d = ComplexMovement(item=movement)
-        result, flag = d.discretize()
+# Function to execute a saved movement
+def execute_movement(mov):
     
+    movement = None
+    flag = False
+    if isinstance(mov, dict):
+        if mov['type'] == 'linear':
+            d = LinearMovement(item=mov)
+            movement, flag = d.discretize()
+        
+        if mov['type'] == 'sinusoidal':
+            d = SinusoidalMovement(item=mov)
+            movement, flag = d.discretize()
+    else:
+        d = ComplexMovement(item=mov)
+        movement, flag = d.discretize()
+
     if flag is True:
         messagebox.showinfo("Info", "There are values ​​that exceed the range 0-100. A cut has been made")
 
@@ -262,13 +273,13 @@ def execute_movement(movement):
             if(val < (time.time() - start_time)):
                 continue
         
-        fingers_data_mapped = Toolbox.mapping(movement[packet][0],movement[packet][1],movement[packet][2],movement[packet][3],movement[packet][4],movement[packet][5])
-        
+        tool = Toolbox()
+        fingers_data_mapped = tool.mapping(movement[packet][0],movement[packet][1],movement[packet][2],movement[packet][3],movement[packet][4],movement[packet][5])
         global arduino
         arduino.write(bytearray(fingers_data_mapped))       
         
           
-#funzione per visualizzare un movimento in frame3*************************************************************
+#funzione per visualizzare un movimento in frame3
 def visualize_movement(gui_instance,movement):
 
     result = None
@@ -484,7 +495,7 @@ class GUI(tk.Tk):
         validate_cmd = self.frame1.register(on_validate)
         
         # Text1
-        label1 = tk.Label(self.frame1, text="Thumb - big servo")
+        label1 = tk.Label(self.frame1, text="Thumb - big servo (0 - 100)%")
         label1.grid(row=1,column=0,sticky="e")
         thumb_big = tk.Entry(self.frame1, fg='black',validate="key", 
                              validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
@@ -492,30 +503,29 @@ class GUI(tk.Tk):
         thumb_big.grid(row=1,column=1)
         
         # Text2
-        label2 = tk.Label(self.frame1, text="Thumb - little servo")
+        label2 = tk.Label(self.frame1, text="Thumb - little servo (0 - 100)%")
         label2.grid(row=2,column=0,sticky="e")
         thumb_little = tk.Entry(self.frame1, fg='black',validate="key", 
                                 validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
         thumb_little.configure(justify=tk.CENTER) 
         thumb_little.grid(row=2,column=1,pady=5)
 
-        
         # Text3
-        label3 = tk.Label(self.frame1, text="Index finger")
+        label3 = tk.Label(self.frame1, text="Index finger (0 - 100)%")
         label3.grid(row=3,column=0,sticky="e")
         index_finger = tk.Entry(self.frame1, fg='black',validate="key", validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
         index_finger.configure(justify=tk.CENTER) 
         index_finger.grid(row=3,column=1,pady=5)
         
         # Text4
-        label4 = tk.Label(self.frame1, text="Middle finger")
+        label4 = tk.Label(self.frame1, text="Middle finger (0 - 100)%")
         label4.grid(row=4,column=0,sticky="e")
         middle_finger = tk.Entry(self.frame1, fg='black',validate="key", 
                                  validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
         middle_finger.configure(justify=tk.CENTER) 
         middle_finger.grid(row=4,column=1,pady=5)
         # Text5
-        label5 = tk.Label(self.frame1, text="Ring and Pinky")
+        label5 = tk.Label(self.frame1, text="Ring and Pinky (0 - 100)%")
         label5.grid(row=5,column=0,sticky="e")
         ring_pinky = tk.Entry(self.frame1, fg='black',validate="key", 
                               validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
@@ -523,7 +533,7 @@ class GUI(tk.Tk):
         ring_pinky.grid(row=5,column=1,pady=5)
         
         # Text6
-        label6 = tk.Label(self.frame1, text="Forearm")
+        label6 = tk.Label(self.frame1, text="Forearm (0 - 100)%")
         label6.grid(row=6,column=0,sticky="e")
         forearm = tk.Entry(self.frame1, fg='black',validate="key", 
                            validatecommand=(validate_cmd, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W")) 
@@ -536,6 +546,10 @@ class GUI(tk.Tk):
         # Button
         button1 = tk.Button(self.frame1, text="Execute", height=1, width=10, font= 10, command=lambda: on_submit(self))
         button1.grid(row=7,column=0,pady=20,columnspan=3)
+
+        info_icon = tk.Label(self.frame1, text="ℹ️", font=("Arial", 24))  
+        info_icon.grid(row=0,column=1,pady=20,columnspan=3)
+        create_tooltip(info_icon, "This section allows you to immediately assign and execute immediately a unique value for each servomotor")
         
         
 
@@ -580,7 +594,7 @@ class GUI(tk.Tk):
         
         # *********** POLLICE - grande ***************************
         # Etichetta 
-        label1 = tk.Label(self.frame2, text="Thumb - big servo")
+        label1 = tk.Label(self.frame2, text="Thumb - big servo (0 - 100)%")
         label1.grid(row=2,column=0,sticky='e')
         
         # entry - init position
@@ -598,7 +612,7 @@ class GUI(tk.Tk):
         
         
         # *********** POLLICE - piccolo ***************************
-        label2 = tk.Label(self.frame2, text="Thumb - little servo")
+        label2 = tk.Label(self.frame2, text="Thumb - little servo (0 - 100)%")
         label2.grid(row=3,column=0,sticky='e')
         
         # entry - init position
@@ -615,7 +629,7 @@ class GUI(tk.Tk):
 
         
         # *********** INDICE ***************************
-        label3 = tk.Label(self.frame2, text="Index")
+        label3 = tk.Label(self.frame2, text="Index (0 - 100)%")
         label3.grid(row=4,column=0,sticky='e')
         
         # entry - init position
@@ -632,7 +646,7 @@ class GUI(tk.Tk):
         
         
         # *********** MEDIO ***************************
-        label4 = tk.Label(self.frame2, text="Middle")
+        label4 = tk.Label(self.frame2, text="Middle (0 - 100)%")
         label4.grid(row=5,column=0,sticky='e')
         
         # entry - init position
@@ -649,7 +663,7 @@ class GUI(tk.Tk):
         
         
         # *********** ANULARE-MIGNOLO ***************************
-        label5 = tk.Label(self.frame2, text="Ring-Pinky")
+        label5 = tk.Label(self.frame2, text="Ring-Pinky (0 - 100)%")
         label5.grid(row=6,column=0,sticky='e')
         
         # entry - init position
@@ -666,7 +680,7 @@ class GUI(tk.Tk):
         
         
         # *********** AVAMBRACCIO ***************************
-        label6 = tk.Label(self.frame2, text="Forearm")
+        label6 = tk.Label(self.frame2, text="Forearm (0 - 100)%")
         label6.grid(row=7,column=0,sticky='e')
         
         # entry - init position
@@ -683,14 +697,14 @@ class GUI(tk.Tk):
         
         
         # *********** TEMPO ***************************
-        label_start_time = tk.Label(self.frame2, text="Start time (millis)")
+        label_start_time = tk.Label(self.frame2, text="Start time")
         label_start_time.grid(row=8,column=1,sticky='nsew',pady=10)
         
-        label_end_time = tk.Label(self.frame2, text="End time (millis)")
+        label_end_time = tk.Label(self.frame2, text="End time")
         label_end_time.grid(row=8,column=2,sticky='nsew',pady=10)
         
         
-        label7 = tk.Label(self.frame2, text="Time")
+        label7 = tk.Label(self.frame2, text="Time (milliseconds)")
         label7.grid(row=9,column=0,sticky='e')
         
         # entry - init time
@@ -706,7 +720,7 @@ class GUI(tk.Tk):
         time_end.grid(row=9,column=2)
         
         # *********** DELTA T ***************************
-        label8 = tk.Label(self.frame2, text="DeltaT(ms) - default 70ms")
+        label8 = tk.Label(self.frame2, text="DeltaT (milliseconds) - default 70")
         label8.grid(row=10,column=0,sticky='e',pady=10)
         
         # entry - init time
@@ -727,6 +741,10 @@ class GUI(tk.Tk):
         button1 = tk.Button(self.frame2, text="Save", height=1, width=10, font= 2,
                             command=lambda: on_save_linear(self,init_list,end_list,time_init,time_end,deltaT))
         button1.grid(row=11,column=0,pady=20,columnspan=4)
+
+        info_icon = tk.Label(self.frame2, text="ℹ️", font=("Arial", 24))
+        info_icon.grid(row=0,column=1,pady=20,columnspan=4)
+        create_tooltip(info_icon, "This section allows you to save in json format a linear movement in your file system")
 
         
         
@@ -1672,7 +1690,6 @@ class GUI(tk.Tk):
             for elem in elements:
                 if elem['root'] == target_id:
                     result.extend(find_elements(elements, elem['id']))
-
             return result
 
         # Visualize a selected movement in frame3
@@ -1695,10 +1712,19 @@ class GUI(tk.Tk):
                 return 
             visualize_movement(gui_instance,movements)
             return
+        
+        def exe_mov(movement):
+            if movement is None:
+                messagebox.showerror("Error", "Select or import a movement correctly")
+                return 
+            
+            if selected_item_tree_view['type'] == "complex":
+                result = find_elements(elements_in_tree_view, selected_item_tree_view['id'])
+                execute_movement(result)
+            else:
+                execute_movement(selected_item_tree_view)
+            return
 
-
-
-        # Aggiungere Menubuttons al frame
         file_button = ttk.Menubutton(self.frame3, text="Edit")
         file_button.grid(row=1, column=0)
         file_menu = Menu(file_button, tearoff=0)
@@ -1706,7 +1732,6 @@ class GUI(tk.Tk):
         file_menu.add_command(label="Import JSON", command=import_json_inner)
         file_menu.add_command(label="Modify", command=modify)
         
-        # Creazione del sottomenu per "Scale"
         modify_menu = Menu(file_menu, tearoff=0)
         modify_menu.add_command(label="1.5x",command=lambda: scale(1.5))
         modify_menu.add_command(label="2x",command=lambda: scale(2.0))
@@ -1720,7 +1745,7 @@ class GUI(tk.Tk):
         
         # Buttons
         button_execute = tk.Button(self.frame3, text="Execute",
-                                 command=lambda: execute_movement(selected_item_tree_view))
+                                 command=lambda: exe_mov(selected_item_tree_view))
         button_execute.grid(row=1,column=1)
         
         button_visualize = tk.Button(self.frame3, text="Visualize", 
@@ -1746,11 +1771,15 @@ class GUI(tk.Tk):
                                    command=lambda: visualize_final_movement(self.frame3,elements_in_tree_view))
         button_vis_fin.grid(row=9,column=0)
 
+        info_icon = tk.Label(self.frame3, text="ℹ️", font=("Arial", 24))  
+        info_icon.grid(row=0, column=0)
+        create_tooltip(info_icon, 
+            "This section allows you to create and save in JSON format a complex movement " +
+            "in your file system, by importing other movements from the filesystem. " +
+            "Each movement ‘overwrites’ the previous movement by numbering")
 
 
 
-        
-        
 
     # *************************************** FRAME 4 - SINUSOIDAL MOVEMENT **********************************************
     def configure_frame4(self):
@@ -1771,16 +1800,16 @@ class GUI(tk.Tk):
         
         # amplitude, frequency, phase, deltaT, y_init
         
-        amplitude_label = tk.Label(self.frame4, text="Amplitude(0-100)")
+        amplitude_label = tk.Label(self.frame4, text="Amplitude (0-100)")
         amplitude_label.grid(row=1, column=1)
         
-        frequency_label = tk.Label(self.frame4, text="Frequency(mHz)")
+        frequency_label = tk.Label(self.frame4, text="Frequency (mHz)")
         frequency_label.grid(row=1, column=2)
         
-        phase_label = tk.Label(self.frame4, text="Phase(-1,1)")
+        phase_label = tk.Label(self.frame4, text="Phase (-1,1)")
         phase_label.grid(row=1, column=3)
         
-        y_init_label = tk.Label(self.frame4, text="Offset y(0-100)")
+        y_init_label = tk.Label(self.frame4, text="Offset (0-100)")
         y_init_label.grid(row=1, column=4)
         
         # Label a sinistra della griglia per ogni riga
@@ -1796,7 +1825,7 @@ class GUI(tk.Tk):
         middle_label = tk.Label(self.frame4, text= "Middle")
         middle_label.grid(row=5, column=0, padx=5, pady=5,sticky="e")
         
-        TL_label = tk.Label(self.frame4, text= "Thumb/Little")
+        TL_label = tk.Label(self.frame4, text= "Ring/Pinky")
         TL_label.grid(row=6, column=0, padx=5, pady=5,sticky="e")
         
         forearm_label = tk.Label(self.frame4, text= "Forearm")
@@ -1819,8 +1848,7 @@ class GUI(tk.Tk):
                 entries[((i-2), j)] = entry
             
         
-        
-        deltaT_label = tk.Label(self.frame4, text="DeltaT(ms) - default 70ms")
+        deltaT_label = tk.Label(self.frame4, text="DeltaT(ms) - default 70")
         deltaT_label.grid(row=10, column=1,pady=10,sticky="s")
         
         startTime_label = tk.Label(self.frame4, text="Start time(ms)")
@@ -1844,11 +1872,14 @@ class GUI(tk.Tk):
                                 validatecommand=(validate_entries, "%d", "%i", "%P", "%s", "%S", "%v", "%V", "%W"))
         endTime_entry.grid(row=11, column=3, padx=5, pady=5)
         
-        
         # Button
         button1 = tk.Button(self.frame4, text="Save", height=1, width=10, font= 2,
                            command=lambda: on_save_sinusoidal(self,startTime_entry,endTime_entry,entries,deltaT_entry))
         button1.grid(row=12,column=0,pady=20, padx=15, columnspan=7)
+
+        info_icon = tk.Label(self.frame4, text="ℹ️", font=("Arial", 24))  
+        info_icon.grid(row=0, column=2, pady=20, padx=2, columnspan=7)
+        create_tooltip(info_icon, "This section allows you to save in json format a sinusoidal movement in your file system")
         
         
         

@@ -35,7 +35,7 @@ class Toolbox(tk.Frame):
 
     # This 2 functions (calculus and mapping) maps an input value (in range 0-100) to the corresponding value on the servo,
     # accordingly to the configuration on the json file
-    def calculus(val,start,stop):
+    def calculus(self,val,start,stop):
         if start==0:
             return int((val/100)*stop)
         else:
@@ -43,7 +43,7 @@ class Toolbox(tk.Frame):
             return int(((val/100)*new_stop)+start)  
 
     def mapping(self,thumb_big_value, thumb_little_value, index_finger_value, middle_finger_value, ringPinky_value, forearm_value):
-        with open("config.json", "r") as json_file:
+        with open("MainEnv/config.json", "r") as json_file:
         #Load the contents of the JSON file into a Python dictionary
             data = json.load(json_file)
         
@@ -198,7 +198,7 @@ class Toolbox(tk.Frame):
             lines.append(line)
 
         plot.set_xlabel('Time instant (ms)')
-        plot.set_ylabel('Servo Value')
+        plot.set_ylabel('Servo Value %')
 
         plot.set_ylim(0, 100)
 
