@@ -20,7 +20,7 @@ from Utility import Toolbox
 import copy
 
 # Global parameters, eventually to be set
-usbport = 'COM5' # Usb port where arduino is connected 
+usbport = 'COM4' # Usb port where arduino is connected 
 arduino = None # Arduino communication instance
 baud = 38400 # Baud - speed parameter for arduino comm. (MUST BE the same value in the arduino sketch)
 
@@ -775,7 +775,8 @@ class GUI(tk.Tk):
             self.frame3.grid_columnconfigure(i, weight=1)
             
         # Title
-        title = ttk.Label(self.frame3, text="Create complex movements", font="8")
+        title_font = ("Segoe UI", 12)
+        title = ttk.Label(self.frame3, text="Visualize/execute movements or create complex movements", font=title_font)
         title.grid(row=0,column=0,pady=20,columnspan=5)
         
         # Frame per Treeview scrollabile
@@ -1331,7 +1332,7 @@ class GUI(tk.Tk):
 
             if type == "complex":
                 ids = return_children(selected_item_tree_view["id"], elements_in_tree_view) #only leaves
-                #calculation min start e max end
+                #calculation min start 
                 min_start = 999999
                 for submov in elements_in_tree_view:
                     if submov['id'] in ids:
@@ -1697,7 +1698,6 @@ class GUI(tk.Tk):
             if movement is None:
                 messagebox.showerror("Error", "Select or import a movement correctly")
                 return 
-            
             if selected_item_tree_view['type'] == "complex":
                 result = find_elements(elements_in_tree_view, selected_item_tree_view['id'])
                 visualize_movement(gui_instance,result)
@@ -1800,7 +1800,7 @@ class GUI(tk.Tk):
         
         # amplitude, frequency, phase, deltaT, y_init
         
-        amplitude_label = tk.Label(self.frame4, text="Amplitude (0-100)")
+        amplitude_label = tk.Label(self.frame4, text="Amplitude (0-100)%")
         amplitude_label.grid(row=1, column=1)
         
         frequency_label = tk.Label(self.frame4, text="Frequency (mHz)")
@@ -1809,7 +1809,7 @@ class GUI(tk.Tk):
         phase_label = tk.Label(self.frame4, text="Phase (-1,1)")
         phase_label.grid(row=1, column=3)
         
-        y_init_label = tk.Label(self.frame4, text="Offset (0-100)")
+        y_init_label = tk.Label(self.frame4, text="Offset (0-100)%")
         y_init_label.grid(row=1, column=4)
         
         # Label a sinistra della griglia per ogni riga
@@ -1902,7 +1902,7 @@ class GUI(tk.Tk):
         frame_menu.add_cascade(label="Create simple movement", menu=submenu_simple_movement)
         
         # Option "Saved movements"
-        frame_menu.add_command(label="Create complex movements", command=lambda: self.show_frame(self.frame3))
+        frame_menu.add_command(label=" Visualize/Execute - Create complex", command=lambda: self.show_frame(self.frame3))
         
         # Option "Shutdown"
         frame_menu.add_command(label="Shutdown", command=lambda: self.close())

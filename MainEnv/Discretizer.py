@@ -89,6 +89,7 @@ class LinearMovement(Movement):
             result = np.nan_to_num(result, nan=50)
             result = result.astype(np.int64)
             return result, exists_cut_values
+        
         else:
             num_rows = len(discrete_times_external)
             num_cols = 7
@@ -157,31 +158,18 @@ class SinusoidalMovement(Movement):
             self.deltaT = self.deltaT     
             self.flag = True      
         else:
-            raise TypeError("All arguments must be null or all non-null")
-
-        # Genera un array di tempi da startTime a end_time con intervalli di deltaT(periodo di campionamento)
+            raise TypeError("All arguments must be null or all non-null")    
         t = np.arange(self.startTime, self.endTime+self.deltaT, self.deltaT)
-
         t_external = None
-        #t_millis_external = None
         if self.flag is True:
-
             t_external = np.arange(self.startTimePassed, self.endTimePassed+self.deltaT, self.deltaT)
-
-        #first element
         column1 = self.amplitude[5] * np.sin(2 * np.pi * self.frequency[5] * (t/1000) + (self.phase[5]*np.pi)) + self.y_init[5]
         y = np.vstack((column1,t)) 
-        for i in range(4,-1,-1):
-            
-            # Calcola i valori della sinusoide
-            # y è un array di valori che rappresentano l'ampiezza della sinusoide in corrispondenza di ciascun istante di tempo t
-            # self.y_init è l'offset che permette all'utente di decidere su quale valore y iniziare
+        for i in range(4,-1,-1):        
+            # Calculates the values of the sine wave
             column_i = self.amplitude[i] * np.sin(2 * np.pi * self.frequency[i] * (t/1000) + (self.phase[i]*np.pi)) + self.y_init[i] 
             y = np.vstack((column_i,y))
-
         result = y.T
-        
-        # exists_cut_values boolean for the warning in the gui
         exists_cut_values = False
         exists_cut_values = any((val > 100 or val < 0) for row in result for val in row[:-1])
         # clip values >100 and <0
@@ -189,8 +177,6 @@ class SinusoidalMovement(Movement):
             result[:, :-1] = np.clip(result[:, :-1], 0, 100)
 
         if self.flag is False:
-            # Sostituzione dei NaN con 50 se la funzione è stata direttamente chiamata dalla GUI (e quindi non siamo in un 
-            # contesto di una movimento complesso più esterno)
             result = np.nan_to_num(result, nan=50)
             result = result.astype(np.int64)
             return result, exists_cut_values
@@ -198,10 +184,10 @@ class SinusoidalMovement(Movement):
             num_rows = len(t_external)
             num_cols = 7
             large_matrix = np.full((num_rows, num_cols), np.nan)
-            start_time = result[0, -1]  # ritorna il primo istante di tempo nella matrice piccola
-            start_index = int((start_time - self.startTimePassed) / (self.deltaT)) #indice di partenza per posizionare la matrice piccola
+            start_time = result[0, -1] 
+            start_index = int((start_time - self.startTimePassed) / (self.deltaT)) 
             large_matrix[start_index:start_index + result.shape[0], :] = result
-            large_matrix[:, -1] = t_external #metto gli istanti di tempo esterni
+            large_matrix[:, -1] = t_external 
             return large_matrix, exists_cut_values
 
     
@@ -255,7 +241,7 @@ class ComplexMovement(Movement):
             
             discrete_times_external = np.arange(t_start, t_end+deltaT, deltaT)
             result =  np.full((len(discrete_times_external), 7), np.nan)
-            result[:, -1] = discrete_times_external #metto gli istanti di tempo esterni
+            result[:, -1] = discrete_times_external
             flag_cut = False
             for submov in result_without_head_complex:
                 if submov['type'] == 'linear':
@@ -278,7 +264,7 @@ class ComplexMovement(Movement):
                 for j in range(result.shape[1]):  
                     if np.isnan(result[i, j]):  
                         result[i, j] = result[i-1, j]  
-            return result.astype(np.int64),flag_cut
+            return result.astype(np.int64), flag_cut
 
 
             
